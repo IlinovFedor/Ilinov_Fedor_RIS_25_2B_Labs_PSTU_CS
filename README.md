@@ -37,4 +37,4 @@
 #### Третий способ
 [ПНИПУ][url_pstu]
 
-[url_pstu]: "http://pstu.ru/"
+[url_pstu]: http://pstu.ru/ "ПНИПУ"
