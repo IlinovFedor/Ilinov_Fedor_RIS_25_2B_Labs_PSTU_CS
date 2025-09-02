@@ -41,3 +41,14 @@
 
 ### Картиночки
 ![pstu_logo](https://pstu.ru/files/2/file/adm/doc/2021/PNIPU_russkiyi.png_02.png "ПНИПУ РОДНЕНЬКИЙ")
+
+```cpp
+#include <iostream>
+
+using namespase std;
+
+int main() {
+    cout << "Hello world!";
+    return 0;
+}
+```
