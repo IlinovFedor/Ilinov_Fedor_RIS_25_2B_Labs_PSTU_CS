@@ -42,6 +42,9 @@
 ### Картиночки
 ![pstu_logo](https://pstu.ru/files/2/file/adm/doc/2021/PNIPU_russkiyi.png_02.png "ПНИПУ РОДНЕНЬКИЙ")
 
+
+### Код 
+
 ```cpp
 #include <iostream>
 
