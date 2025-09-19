@@ -1,5 +1,3 @@
-![Alan Turing](https://commons.wikimedia.org/wiki/File:Alan_Turing_Aged_16.jpg)
-
 # Ильинов Фё-
 ## дор РИС-25-2Б
 ### ГОСТ 19.701-90 -- гост, регламентирующий блок-схемы (не нумерованный список)
