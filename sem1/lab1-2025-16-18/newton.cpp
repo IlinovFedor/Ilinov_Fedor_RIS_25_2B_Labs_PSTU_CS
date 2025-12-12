@@ -5,21 +5,24 @@
 using namespace std;
 
 double a = 1, b = 2;
-double lambda = 2 / (1 - cos (1) + 1 - cos (1 / 2) / (2 * 2));
+double x0 = (a + b) / 2, x1;
 double eps = 10e-7;
 int i = 1;
 
-double phi(double x) {
-    return x - lambda * (x - 2 + sin(1 / x));
+double f(double x) {
+    return x - 2 + sin(1 / x);
+}
+
+double pr(double x) {
+    return 1 - cos(1 / x) / (x * x);
 }
 
 int main() {
-    double x0 = (a + b) / 2;
-    double x1 = phi(x0);
+    x1 = x0 - f(x0) / pr(x0);
 
     while (abs(x0 - x1) > eps) {
         x0 = x1;
-        x1 = phi(x0);
+        x1 = x0 - f(x0) / pr(x0);
         cout << fixed << setprecision(6) << "Step: " << i << " Value: " << x1 << '\n';
         i++;
     }

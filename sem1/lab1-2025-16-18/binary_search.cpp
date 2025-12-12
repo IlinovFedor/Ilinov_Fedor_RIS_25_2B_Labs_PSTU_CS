@@ -4,22 +4,25 @@
 
 using namespace std;
 
-float f(float x) {
+double f(double x) {
     return x - 2 + sin(1 / x);
 }
 
-float a = 1, b = 2, c = (a + b) / 2;
-float e = 10e-6;
+double a = 1, b = 2, c = (a + b) / 2;
+double eps = 10e-7;
+int i = 1;
 
 int main() {
-    while (abs(a - b) > e) {
+    while (abs(a - b) > eps) {
         c = (b + a) / 2;
         if (f(a) * f(c) < 0) {
             b = c;
         } else {
             a = c;
         }
+        cout << fixed << setprecision(6) << "Step: " << i << " Value: " << b << '\n';
+        i++;
     }
 
-    cout << setprecision(7) << b;
+    cout << fixed << setprecision(6) << b;
 }
