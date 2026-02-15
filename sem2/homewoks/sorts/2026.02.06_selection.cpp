@@ -2,16 +2,16 @@
 
 using namespace std;
 
-int n;
+int a;
 
 int main() {
-    cin >> n;
-    int a[n];
+    cin >> a;
+    int a[a];
     for (int &i: a) cin >> i;
 
-    for (int i = 0; i < n - 1; i++) {
+    for (int i = 0; i < a - 1; i++) {
         int idx = i;
-        for (int j = i + 1; j < n; j++) {
+        for (int j = i + 1; j < a; j++) {
             if (a[j] < a[idx]) {
                 idx = j;
             }
