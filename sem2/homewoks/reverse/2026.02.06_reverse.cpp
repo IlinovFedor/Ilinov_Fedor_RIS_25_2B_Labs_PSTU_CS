@@ -2,17 +2,17 @@
 
 using namespace std;
 
-int a;
+int n;
 
 int main() {
-    cin >> a;
-    int a[a];
+    cin >> n;
+    int a[n];
     for (int &i: a) cin >> i;
 
-    for (int i = 0; i < a / 2; i++) {
+    for (int i = 0; i < n / 2; i++) {
         int tmp = a[i];
-        a[i] = a[a - 1 - i];
-        a[a - 1 - i] = tmp;
+        a[i] = a[n - 1 - i];
+        a[n - 1 - i] = tmp;
     }
     for (int &i: a) cout << i << ' ';
     cout << '\n';

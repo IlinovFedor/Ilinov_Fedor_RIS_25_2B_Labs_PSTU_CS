@@ -10,6 +10,10 @@ int main() {
     for (int &i: a) cin >> i;
 
     for (int i = 0; i < n; i++) {
+        string s;
+        getline(cin, s);
+        for (int &i: a) cout << i << ' ';
+        cout << '\n';
         for (int j = 0; j < n - 1; j++) {
             if (a[j] > a[j + 1]) {
                 int tmp = a[j];
@@ -18,9 +22,6 @@ int main() {
             }
         }
     }
-
-    for (int &i: a) cout << i << ' ';
-    cout << '\n';
 }
 
 // 6 8 8 5 4 8 2

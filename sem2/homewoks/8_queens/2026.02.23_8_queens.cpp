@@ -32,10 +32,13 @@ bool isOk(int r, int c) {
 }
 
 void f(int r) {
-    if (r == tableSize) {
-        cout << "Solution №" << ++attempt << "\n\n";
-        print();
+    print();
+    string(s);
+    getline(cin, s);
+    if (r == tableSize || attempt > 0) {
+        cout << "Solution " << ++attempt << "\n\n";
         cout << '\n';
+        exit(0);
     } else {
         for (int i = 0; i < tableSize; i++) {
             if (isOk(r, i)) {

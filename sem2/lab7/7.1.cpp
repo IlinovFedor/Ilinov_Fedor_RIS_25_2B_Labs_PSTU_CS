@@ -58,11 +58,18 @@ void func(int& n, int* l) {
 int main() {
     srand(time(NULL));
     int size = 10, rows = 5, cols = 5;
-
+    cout << "Size? ";
+    cin >> size;
 
     int* a = new int[size];
     for (int i = 0; i < size; i++)
         cin >> a[i];
+
+    cout << "Rows? ";
+    cin >> rows;
+
+    cout << "Columns? ";
+    cin >> cols;
 
     int** m = new int*[rows];
     for (int i = 0; i < rows; i++) {
