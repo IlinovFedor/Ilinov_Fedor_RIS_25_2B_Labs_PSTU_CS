@@ -2,24 +2,16 @@
 
 using namespace std;
 
-enum chiselki {
-    nolik,
-    raz = 4,
-    dva,
-    tri,
-    chetire,
-    pyat
+struct Node {
+    int data;
+    Node* next = nullptr;
 };
 
-chiselki mem = pyat;
-chiselki house(raz);
+struct List {
+    Node* node;
+};
 
 int main() {
-    int a = tri;
-    cout << a;
-    int b = chiselki(pyat);
-    cout << '\n' << b;
 
-    cout << '\n' << house;
-    cout << '\n' << mem;
+
 }
