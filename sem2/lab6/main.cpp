@@ -3,38 +3,44 @@
 using namespace std;
 
 string s, l[100];
-int idx = -1;
-int i = 0;
-bool f = false;
+string tmp;
+int i;
+int n;
+char c;
 
-void func() {
-    for (int i = 0; i < idx + 1; i++) {
-        for (int j = 0; j < idx; j++) {
-            if (l[j] < l[j + 1]) {
-                string tmp = l[j];
-                l[j] = l[j + 1];
-                l[j + 1] = tmp;
+void sort() {
+    for (int i = 0; i < n - 1; i++) {
+        int idx = i;
+        for (int j = i + 1; j < n; j++) {
+            if (l[j] > l[idx]) {
+                idx = j;
             }
         }
+        string tmp = l[i];
+        l[i] = l[idx];
+        l[idx] = tmp;
     }
 }
 
 int main() {
     getline(cin, s);
 
-    while (i < s.length()) {
-        if (s[i] == ' ') {
-            f = false;
+    while (i < s.size()) {
+        c = s[i];
+        bool f = '0' <= c && c <= '9';
+        if (f) {
+            while (i != s.size() && c != ' ') {
+                tmp += c;
+                i++;
+                c = s[i];
+            }
+            l[n] = tmp;
+            n++;
+            tmp = "";
         }
-        if (!f && '0' <= s[i] && s[i] <= '9') {
-            f = true;
-            idx++;
-        }
-        if (f)
-            l[idx] += s[i];
         i++;
     }
-    func();
+    sort();
 
-    for (int i = 0; i < idx + 1; i++) cout << '\"' << l[i] << "\"\n";
+    for (i = 0; i < n; i++) cout << l[i] << ' ';
 }
