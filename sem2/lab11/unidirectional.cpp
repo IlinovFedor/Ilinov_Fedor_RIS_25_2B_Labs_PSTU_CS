@@ -25,7 +25,7 @@ struct UniList {
     char* get(int);
     int find(char*);
 
-    void print();
+    void print(ostream&);
     void clear();
 };
 
@@ -99,6 +99,10 @@ void UniList::insert(int idx, char * data) {
     while (node->next != nullptr && i != idx - 1) {
         node = node->next;
         i++;
+    }
+    if (i + 1 == idx - 1) {
+        pushBack(data);
+        return;
     }
     if (i != idx - 1) {
         cout << "out of range\n";
@@ -174,32 +178,43 @@ int UniList::find(char * s) {
     while (node->next != nullptr) {
         bool f = true;
         for (int j = 0; j < STRING_SIZE && f; j++) {
-            if (node->data[j] != s[j])
-                f = false;
+            if (node->data[j] != '\0' && s[j] != '\0') {
+                if (node->data[j] != s[j])
+                    f = false;
+            }
         }
         if (f)
             return i;
         i++;
         node = node->next;
     }
+    bool f = true;
+    for (int j = 0; j < STRING_SIZE && f; j++) {
+        if (node->data[j] != '\0' && s[j] != '\0') {
+            if (node->data[j] != s[j])
+                f = false;
+        }
+    }
+    if (f)
+        return i;
     return -1;
 }
 
-void UniList::print() {
+void UniList::print(ostream &stream) {
     auto node = head;
     if (node == nullptr) {
-        cout << "empty\n";
+        stream << "empty\n";
         return;
     }
 
     while (node->next != nullptr) {
-        cout << node->data << ' ';
+        stream << node->data << ' ';
         node = node->next;
     }
-    cout << node->data << '\n';
+    stream << node->data << '\n';
 }
 
 void UniList::clear() {
     while (head != nullptr)
-        popBack();
+        popFront();
 }

@@ -113,6 +113,10 @@ void BiList::insert(int idx, char * data) {
         node = node->next;
         i++;
     }
+    if (i + 1 == idx) {
+        pushBack(data);
+        return;
+    }
     if (i != idx) {
         cout << "out of range\n";
         delete newNode;
@@ -188,14 +192,26 @@ int BiList::find(char * s) {
     while (node->next != nullptr) {
         bool f = true;
         for (int j = 0; j < STRING_SIZE && f; j++) {
-            if (node->data[j] != s[j])
-                f = false;
+            if (node->data[j] != '\0' && s[j] != '\0') {
+                if (node->data[j] != s[j])
+                    f = false;
+            }
         }
         if (f)
             return i;
         i++;
         node = node->next;
     }
+    bool f = true;
+    for (int j = 0; j < STRING_SIZE && f; j++) {
+        if (node->data[j] != '\0' && s[j] != '\0') {
+            if (node->data[j] != s[j])
+                f = false;
+        }
+    }
+    if (f)
+        return i;
+
     return -1;
 }
 
@@ -215,5 +231,5 @@ void BiList::print() {
 
 void BiList::clear() {
     while (head != nullptr)
-        popBack();
+        popFront();
 }
