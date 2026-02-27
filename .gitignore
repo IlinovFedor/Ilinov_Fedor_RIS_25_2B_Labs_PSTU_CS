@@ -1,1 +1,3 @@
 *.exe
+tools/linux-x64
+out
