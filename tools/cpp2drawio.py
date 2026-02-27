@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """
+!!! ВНИМАНИЕ! VIBE-CODE! DO NOT TOUCH !!!
+АВТОР ПРОГРАММЫ ДАЖЕ НЕ ЗНАЕТ ПИТОН
+100% AI-SLOP HUMAN-FREE
+
 cpp2drawio.py - Convert C++ source files to draw.io flowchart diagrams.
 
 Usage:
