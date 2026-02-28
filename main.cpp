@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 
 using namespace std;
@@ -15,8 +16,11 @@ struct Foo {
     char c;   // 1
 };
 
+ofstream f("test.txt");
+
 int main() {
-    cout << "sizeof(Bar): " << sizeof(Bar);
-    cout << "\nsizeof(Foo): " << sizeof(Foo);
+    f << 1;
+    for (int i = 0; i < 4094; i++) f << '\n';
+    f << 1;
 }
 

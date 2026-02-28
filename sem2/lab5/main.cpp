@@ -14,6 +14,20 @@ using namespace std;
 9	10	11	12
 */
 
+
+void f(int* l, int* m, int rows, int cols) {
+    for (int i = 0; i < rows * cols; i += cols) {
+        int j = rows * cols;
+        while (l[i] != l[j]) {
+            j++;
+        }
+        int pos = (j - rows * cols) % rows;
+        for (int j = i; j < i + cols; j++) {
+            m[pos * cols + j - i] = l[j];
+        }
+    }
+}
+
 int rows, cols;
 
 int main() {
@@ -22,16 +36,8 @@ int main() {
     int m[rows][cols];
     for (int& i : l) cin >> i;
 
-    for (int i = 0; i < rows * cols; i += cols) {
-        int j = rows * cols;
-        while (l[i] != l[j]) {
-            j++;
-        }
-        int pos = (j - rows * cols) % rows;
-        for (int j = i; j < i + cols; j++) {
-            m[pos][j - i] = l[j];
-        }
-    }
+    f(l, *m, rows, cols);
+
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
             cout << m[i][j] << '\t';

@@ -127,6 +127,21 @@ class MacroWrapperNode(ASTNode):
     name: str
     body: list
 
+@dataclass
+class StructMethodNode(ASTNode):
+    """A method inside a struct: signature + optional parsed body."""
+    signature: str
+    body: Optional[list]   # None if only declared (no braces in struct body)
+
+@dataclass
+class StructNode(ASTNode):
+    """A C++ struct definition."""
+    name: str
+    # Ordered list of members: each item is either
+    #   ('field',  str)             — a field declaration text
+    #   ('method', StructMethodNode)— a method (with or without body)
+    members: list
+
 
 # ============================================================================
 # C++ Parser
@@ -245,6 +260,19 @@ class CppParser:
         if m:
             self.pos += m.end()
             return UsingNode(m.group(0).strip())
+
+        # struct definition
+        m = re.match(r'struct\s+(\w+)\s*\{', remaining)
+        if m:
+            name = m.group(1)
+            self.pos += m.end() - 1   # position on '{'
+            body_text = self._extract_braced()
+            # consume optional ';' after '}'
+            self._skip_ws()
+            if self.pos < len(self.source) and self.source[self.pos] == ';':
+                self.pos += 1
+            members = self._parse_struct_body(body_text)
+            return StructNode(name, members)
 
         # function definition
         func = self._try_parse_function()
@@ -532,6 +560,97 @@ class CppParser:
                 off2 = r2off + ae + se
 
         return IfNode(pc, then, else_body), off2
+
+    def _parse_struct_body(self, text: str) -> list:
+        """Parse the body of a struct into an ordered list of ('field'|'method', ...) tuples.
+
+        Each tuple is one of:
+          ('field',  str)              — field declaration text
+          ('method', StructMethodNode) — method (with optional body)
+
+        Members are returned in source order.
+        """
+        members = []
+        pos = 0
+        text = text.strip()
+
+        while pos < len(text):
+            # skip whitespace
+            while pos < len(text) and text[pos] in ' \t\n\r':
+                pos += 1
+            if pos >= len(text):
+                break
+            rem = text[pos:]
+
+            # access specifiers: public: / private: / protected:
+            m = re.match(r'(public|private|protected)\s*:', rem)
+            if m:
+                pos += m.end()
+                continue
+
+            # method: anything that contains '(' before ';' or '{'
+            # Find the first ';' or '{' to decide
+            # We must be careful not to confuse e.g. "int arr[10];" with a method
+            first_semi = self._find_first_unquoted(rem, ';')
+            first_brace = self._find_first_unquoted(rem, '{')
+            first_paren = self._find_first_unquoted(rem, '(')
+
+            # if there's a '(' and it comes before the first ';', it's a method
+            is_method = (first_paren != -1 and
+                         (first_semi == -1 or first_paren < first_semi))
+
+            if is_method:
+                # extract signature up to (and including) the closing ')'
+                sig_end, _ = self._parens(rem, first_paren)
+                # sig_end is the content; the closing ')' index = second return value
+                _, paren_end = self._parens(rem, first_paren)
+                signature = rem[:paren_end].strip()
+
+                # does it have a body?
+                after_paren = rem[paren_end:].lstrip()
+                ap_off = paren_end + (len(rem[paren_end:]) - len(after_paren))
+
+                if after_paren.startswith('{'):
+                    body_text, be = self._braced_text(rem, ap_off)
+                    body_nodes = self._parse_block(body_text)
+                    # skip trailing ';' if any
+                    rest = rem[be:].lstrip()
+                    extra = be + (len(rem[be:]) - len(rest))
+                    if rest.startswith(';'):
+                        extra += 1
+                    members.append(('method', StructMethodNode(signature, body_nodes)))
+                    pos += extra
+                else:
+                    # declaration only (no body): find ';'
+                    se = self._stmt_end(rem)
+                    sig_text = rem[:se].strip().rstrip(';')
+                    members.append(('method', StructMethodNode(sig_text, None)))
+                    pos += se
+            else:
+                # field: read up to ';'
+                se = first_semi + 1 if first_semi != -1 else len(rem)
+                field_text = rem[:se].strip().rstrip(';')
+                if field_text:
+                    members.append(('field', field_text))
+                pos += se
+
+        return members
+
+    def _find_first_unquoted(self, text: str, ch: str) -> int:
+        """Return index of first occurrence of ch outside of strings, or -1."""
+        i = 0
+        while i < len(text):
+            c = text[i]
+            if c in ('"', "'"):
+                q = c; i += 1
+                while i < len(text) and text[i] != q:
+                    if text[i] == '\\':
+                        i += 1
+                    i += 1
+            elif c == ch:
+                return i
+            i += 1
+        return -1
 
     # -- micro-helpers --
 
@@ -845,6 +964,46 @@ class DrawioGenerator:
             txt = ''.join(html_lines)
             self._cell(self._uid(), self.S_TEXT_L, txt,
                        bx + serif + 5, ay - 5, 200, 40)
+        return self._xml()
+
+    def generate_struct(self, struct: 'StructNode') -> str:
+        """Generate a draw.io flowchart for a C++ struct.
+
+        Layout:
+          oval  "struct Name"
+          for each member in source order:
+            rect        if it is a field
+            process     if it is a method (double vertical lines)
+          oval  "end"
+        """
+        self._reset()
+
+        # header oval
+        hdr = f"struct {struct.name}"
+        sid = self._ellipse(hdr)
+        self._cy += self.EH + self.GAP
+
+        last = sid
+        for kind, member in struct.members:
+            if kind == 'field':
+                w = self._tw(member)
+                rid = self._rect(member, w=w)
+                self._edge(last, rid)
+                self._cy += self.RH + self.GAP
+                last = rid
+            else:  # method
+                sig = member.signature
+                w = self._tw(sig)
+                pid = self._process(sig, w=w)
+                self._edge(last, pid)
+                self._cy += self.PROC_H + self.GAP
+                last = pid
+
+        # closing oval
+        eid = self._ellipse("end")
+        self._edge(last, eid)
+        self._cy += self.EH + self.GAP
+
         return self._xml()
 
     # -- body processing --
@@ -1458,6 +1617,7 @@ def convert(input_file: str, output_dir: str | None = None, png: bool = False):
     gvars = [n for n in nodes if isinstance(n, GlobalVarNode)]
     funcs = [n for n in nodes if isinstance(n, FunctionNode)]
     defs = [n for n in nodes if isinstance(n, DefineNode)]
+    structs = [n for n in nodes if isinstance(n, StructNode)]
 
     files: list[str] = []
     name_counts: dict[str, int] = {}
@@ -1492,6 +1652,42 @@ def convert(input_file: str, output_dir: str | None = None, png: bool = False):
             f.write(xml)
         print(f"  -> {path}")
         files.append(path)
+
+    for st in structs:
+        # 1. Struct overview diagram: oval + fields (rect) + methods (process) + end
+        g = DrawioGenerator()
+        xml = g.generate_struct(st)
+        fname = f"{base}-{st.name}.drawio"
+        path = os.path.join(output_dir, fname)
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write(xml)
+        print(f"  -> {path}")
+        files.append(path)
+
+        # 2. For every method that has a body, generate a full function flowchart
+        method_name_counts: dict[str, int] = {}
+        for kind, member in st.members:
+            if kind != 'method':
+                continue
+            if member.body is None:
+                continue  # only declaration, no body to diagram
+            # wrap in a FunctionNode so generate_function can reuse it
+            fn_node = FunctionNode(signature=member.signature, body=member.body)
+            g2 = DrawioGenerator()
+            xml2 = g2.generate_function(fn_node, [], [], [])
+            mname = _func_name(member.signature)
+            if mname in method_name_counts:
+                method_name_counts[mname] += 1
+                unique_mname = f"{mname}{method_name_counts[mname]}"
+            else:
+                method_name_counts[mname] = 1
+                unique_mname = mname
+            mfname = f"{base}-{st.name}_{unique_mname}.drawio"
+            mpath = os.path.join(output_dir, mfname)
+            with open(mpath, 'w', encoding='utf-8') as f:
+                f.write(xml2)
+            print(f"  -> {mpath}")
+            files.append(mpath)
 
     if png:
         for df in files:
