@@ -1,220 +1,253 @@
+#include "unidirectional.h"
+#include "errors.h"
 #include <iostream>
+#include <fstream>
 
-using namespace std;
-
-#ifndef STRING_SIZE
-#define STRING_SIZE 256
-#endif
-
-struct UniNode {
-    char* data;
-    UniNode* next = nullptr;
-};
-
-struct UniList {
-    UniNode* head = nullptr;
-
-    void pushBack(char*);
-    void popBack();
-
-    void pushFront(char*);
-    void popFront();
-
-    void insert(int, char*);
-    void remove(int);
-    char* get(int);
-    int find(char*);
-
-    void print(ostream&);
-    void clear();
-};
-
-void UniList::pushBack(char * data) {
-    auto newNode = new UniNode;
-    newNode->data = data;
-
-    if (head == nullptr) {
-        head = newNode;
+template<class T>
+void UniList<T>::pushBack(T& data) {
+    auto node = new UniNode<T>;
+    node->data = data;
+    if (size == 0) {
+        head = node;
+        tail = node;
+        size++;
         return;
     }
 
-    auto node = head;
-    while (node->next != nullptr)
-        node = node->next;
-    
-    node->next = newNode;
+    tail->next = node;
+    tail = node;
+    size++;
 }
 
-void UniList::popBack() {
-    if (head == nullptr) {
+template<class T>
+void UniList<T>::popBack() {
+    if (size == 0)
         return;
-    }
-    if (head->next == nullptr) {
-        delete[] head->data;
+
+    if (size == 1) {
         delete head;
         head = nullptr;
+        tail = nullptr;
+        size--;
         return;
     }
 
     auto node = head;
-    auto prev = head;
-    while (node->next != nullptr) {
-        prev = node;
+    while (node->next != tail)
         node = node->next;
+
+    delete tail;
+    tail = node;
+    tail->next = nullptr;
+    size--;
+}
+
+template<class T>
+void UniList<T>::pushFront(T & data) {
+    auto node = new UniNode<T>;
+    node->data = data;
+    if (size == 0) {
+        head = node;
+        tail = node;
+        size++;
+        return;
     }
 
-    prev->next = nullptr;
-    delete[] node->data;
-    delete node;
+    node->next = head;
+    head = node;
+    size++;
 }
 
-
-void UniList::pushFront(char * data) {
-    auto newNode = new UniNode;
-    newNode->data = data;
-    newNode->next = head;
-    head = newNode;
-}
-
-void UniList::popFront() {
-    if (head == nullptr)
+template<class T>
+void UniList<T>::popFront() {
+    if (size == 0)
         return;
-    auto tmp = head;
+
+    auto del = head;
     head = head->next;
-    delete[] tmp->data;
-    delete tmp;
+
+    if (head == nullptr)
+        tail = nullptr;
+
+    delete del;
+    size--;
 }
 
-void UniList::insert(int idx, char * data) {
+template<class T>
+UniResult<T> UniList<T>::insert(int idx, T & data) {
+    UniResult<T> res;
     if (idx == 0) {
         pushFront(data);
-        return;
+        return res;
     }
-
-    auto newNode = new UniNode;
-    newNode->data = data;
-
-    auto node = head;
-    int i = 0;
-    while (node->next != nullptr && i != idx - 1) {
-        node = node->next;
-        i++;
-    }
-    if (i + 1 == idx - 1) {
+    if (idx == size) {
         pushBack(data);
-        return;
+        return res;
     }
-    if (i != idx - 1) {
-        cout << "out of range\n";
-        delete newNode;
-        return;
+    if (!(0 < idx && idx < size)) {
+        res.error = outOfRange;
+        return res;
     }
 
-    auto tmp = node->next;
+    auto node = head;
+    for (int i = 0; i < idx - 1; i++)
+        node = node->next;
+
+    auto newNode = new UniNode<T>;
+    newNode->data = data;
+    newNode->next = node->next;
     node->next = newNode;
-    newNode->next = tmp;
+
+    res.node = newNode;
+    size++;
+    return res;
 }
 
-void UniList::remove(int idx) {
-    if (head == nullptr) {
-        cout << "cannot remove: empty\n";
-        return;
+template<class T>
+UniResult<T> UniList<T>::remove(int idx) {
+    UniResult<T> res;
+    if (!(0 <= idx && idx < size)) {
+        res.error = outOfRange;
+        return res;
     }
-
-    auto node = head;
-    auto prev = head;
-    int i = 0;
-    while (node->next != nullptr && i != idx) {
-        prev = node;
-        node = node->next;
-        i++;
-    }
-    if (i != idx) {
-        cout << "cannot remove: out of range\n";
-        return;
-    }
-    if (i == 0) {
+    if (idx == 0) {
         popFront();
-        return;
+        return res;
     }
-    if (node->next == nullptr) {
+    if (idx == size - 1) {
         popBack();
-        return;
-    }
-
-
-    prev->next = node->next;
-    delete[] node->data;
-    delete node;
-}
-
-char *UniList::get(int idx) {
-    if (head == nullptr) {
-        cout << "cannot get: empty\n";
-        return nullptr;
+        return res;
     }
 
     auto node = head;
-    int i = 0;
-    while (node->next != nullptr && i != idx) {
+    for (int i = 0; i < idx - 1; i++)
         node = node->next;
-        i++;
-    }
-    if (i != idx) {
-        cout << "cannot get: out of range\n";
-        return nullptr;
-    }
 
-    return node->data;
+    auto del = node->next;
+    node->next = del->next;
+    delete del;
+    size--;
+    return res;
 }
 
-int UniList::find(char * s) {
-    int i = 0;
-    auto node = head;
-    if (node == nullptr) {
-        cout << "cannot find: empty\n";
-        return -1;
+template<class T>
+UniResult<T> UniList<T>::get(int idx) {
+    UniResult<T> res;
+    if (!(0 <= idx && idx < size)) {
+        res.error = outOfRange;
+        return res;
     }
-    while (node->next != nullptr) {
-        bool f = true;
-        for (int j = 0; j < STRING_SIZE && f; j++) {
-            if (node->data[j] != '\0' && s[j] != '\0') {
-                if (node->data[j] != s[j])
-                    f = false;
-            }
-        }
-        if (f)
+
+    auto node = head;
+    for (int i = 0; i < idx; i++) {
+        node = node->next;
+    }
+
+    res.node = node;
+    return res;
+}
+
+template<class T>
+int UniList<T>::find(T & data) {
+    auto node = head;
+    int i = 0;
+    while (node != nullptr) {
+        if (node->data == data) {
             return i;
+        }
         i++;
         node = node->next;
     }
-    bool f = true;
-    for (int j = 0; j < STRING_SIZE && f; j++) {
-        if (node->data[j] != '\0' && s[j] != '\0') {
-            if (node->data[j] != s[j])
-                f = false;
-        }
-    }
-    if (f)
-        return i;
+
     return -1;
 }
 
-void UniList::print(ostream &stream) {
-    auto node = head;
-    if (node == nullptr) {
+template<class T>
+void UniList<T>::print(std::ostream& stream) {
+    if (size == 0) {
         stream << "empty\n";
         return;
     }
-
-    while (node->next != nullptr) {
+    auto node = head;
+    while (node != nullptr) {
         stream << node->data << ' ';
         node = node->next;
     }
-    stream << node->data << '\n';
+    stream << '\n';
 }
 
-void UniList::clear() {
-    while (head != nullptr)
-        popFront();
+template<class T>
+void UniList<T>::clear() {
+    auto node = head;
+    while (node != nullptr) {
+        auto tmp = node->next;
+        delete node;
+        node = tmp;
+    }
+    head = nullptr;
+    tail = nullptr;
+    size = 0;
+}
+
+int mainUni() {
+    using namespace std;
+    int n, m, k;
+    UniList<string> list;
+    cout << "Size:\n";
+    cin >> n;
+    for (int i = 0; i < n; i++) {
+        string s;
+        cin >> s;
+        list.pushBack(s);
+    }
+    list.print(cout);
+
+    cout << "Delete:\n";
+    cin >> m;
+    list.remove(m - 1);
+    list.print(cout);
+    cout << "Key:\n";
+    string key;
+    cin >> key;
+    int idx = list.find(key);
+    cout << "Index: " << idx << '\n';
+    cout << "Amount:\n";
+    cin >> k;
+
+
+    cout << "First " << k << " words:\n";
+    for (int i = 0; i < k; i++) {
+        string s;
+        cin >> s;
+        list.insert(idx, s);
+        idx++;
+        list.print(cout);
+    }
+
+    idx++;
+    cout << "Second " << k << " words:\n";
+    for (int i = 0; i < k; i++) {
+        string s;
+        cin >> s;
+        list.insert(idx, s);
+        idx++;
+        list.print(cout);
+    }
+
+    fstream file("file.txt", ios::in | ios::out);
+    list.print(file);
+    file.seekp(0);
+
+    list.clear();
+    list.print(cout);
+    for (int i = 0; i < n - 1 + 2 * k; i++) {
+        string s;
+        file >> s;
+        list.pushBack(s);
+    }
+    file.close();
+    list.print(cout);
+    list.clear();
+
+    return 0;
 }

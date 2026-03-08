@@ -1,235 +1,258 @@
+#include "bidirectional.h"
+#include "errors.h"
 #include <iostream>
+#include <fstream>
 
-using namespace std;
-
-#ifndef STRING_SIZE
-#define STRING_SIZE 256
-#endif
-
-struct BiNode {
-    BiNode* prev = nullptr;
-    char* data;
-    BiNode* next = nullptr;
-};
-
-struct BiList {
-    BiNode* head = nullptr;
-    BiNode* tail = nullptr;
-
-    void pushBack(char*);
-    void popBack();
-
-    void pushFront(char*);
-    void popFront();
-
-    void insert(int, char*);
-    void remove(int);
-    char* get(int);
-    int find(char *);
-
-    void print();
-    void clear();
-};
-
-void BiList::pushBack(char * data) {
-    auto newNode = new BiNode;
-    newNode->data = data;
-
-    if (head == nullptr || tail == nullptr) {
-        head = newNode;
-        tail = newNode;
+template<class T>
+void BiList<T>::pushBack(T& data) {
+    auto node = new BiNode<T>;
+    node->data = data;
+    if (size == 0) {
+        head = node;
+        tail = node;
+        size++;
         return;
     }
 
-    tail->next = newNode;
-    newNode->prev = tail;
-    tail = newNode;
+    node->prev = tail;
+    tail->next = node;
+    tail = node;
+    size++;
 }
 
-void BiList::popBack() {
-    if (tail == nullptr)
+template<class T>
+void BiList<T>::popBack() {
+    if (size == 0)
         return;
-    if (tail == head) {
-        delete[] tail->data;
-        delete tail;
-        tail = nullptr;
+
+    auto del = tail;
+    tail = tail->prev;
+
+    if (tail != nullptr)
+        tail->next = nullptr;
+    else
         head = nullptr;
+
+    delete del;
+    size--;
+}
+
+template<class T>
+void BiList<T>::pushFront(T & data) {
+    auto node = new BiNode<T>;
+    node->data = data;
+    if (size == 0) {
+        head = node;
+        tail = node;
+        size++;
         return;
     }
 
-    auto tmp = tail->prev;
-    tmp->next = nullptr;
-    delete[] tail->data;
-    delete tail;
-    tail = tmp;
+    node->next = head;
+    head->prev = node;
+    head = node;
+    size++;
 }
 
-
-void BiList::pushFront(char * data) {
-    auto newNode = new BiNode;
-    newNode->data = data;
-
-    if (head == nullptr || tail == nullptr) {
-        head = newNode;
-        tail = newNode;
+template<class T>
+void BiList<T>::popFront() {
+    if (size == 0)
         return;
-    }
 
-    head->prev = newNode;
-    newNode->next = head;
-    head = newNode;
-}
+    auto del = head;
+    head = head->next;
 
-void BiList::popFront() {
-    if (head == nullptr)
-        return;
-    if (tail == head) {
-        delete[] tail->data;
-        delete tail;
+    if (head != nullptr)
+        head->prev = nullptr;
+    else
         tail = nullptr;
-        head = nullptr;
-        return;
-    }
 
-    auto tmp = head->next;
-    tmp->prev = nullptr;
-    delete[] head->data;
-    delete head;
-    head = tmp;
+    delete del;
+    size--;
 }
 
-void BiList::insert(int idx, char * data) {
+template<class T>
+BiResult<T> BiList<T>::insert(int idx, T & data) {
+    BiResult<T> res;
     if (idx == 0) {
         pushFront(data);
-        return;
+        return res;
+    }
+    if (idx == size) {
+        pushBack(data);
+        return res;
+    }
+    if (!(0 < idx && idx < size)) {
+        res.error = outOfRange;
+        return res;
     }
 
-    auto newNode = new BiNode;
+    auto node = head;
+    for (int i = 0; i < idx; i++) {
+        node = node->next;
+    }
+
+    auto newNode = new BiNode<T>;
     newNode->data = data;
 
-    auto node = head;
-    int i = 0;
-    while (node->next != nullptr && i != idx) {
-        node = node->next;
-        i++;
-    }
-    if (i + 1 == idx) {
-        pushBack(data);
-        return;
-    }
-    if (i != idx) {
-        cout << "out of range\n";
-        delete newNode;
-        return;
-    }
-
-
-    newNode->prev = node->prev;
-    newNode->next = node;
     node->prev->next = newNode;
+    newNode->prev = node->prev;
+
     node->prev = newNode;
+    newNode->next = node;
+
+    res.node = newNode;
+    size++;
+    return res;
 }
 
-void BiList::remove(int idx) {
-    if (head == nullptr) {
-        cout << "cannot remove: empty\n";
-        return;
+template<class T>
+BiResult<T> BiList<T>::remove(int idx) {
+    BiResult<T> res;
+    if (!(0 <= idx && idx < size)) {
+        res.error = outOfRange;
+        return res;
     }
-
-    auto node = head;
-    int i = 0;
-    while (node->next != nullptr && i != idx) {
-        node = node->next;
-        i++;
-    }
-    if (i != idx) {
-        cout << "cannot remove: out of range\n";
-        return;
-    }
-    if (i == 0) {
+    if (idx == 0) {
         popFront();
-        return;
+        return res;
     }
-    if (node->next == nullptr) {
+    if (idx == size - 1) {
         popBack();
-        return;
+        return res;
     }
 
-    node->prev->next = node->next;
+    auto node = head;
+    for (int i = 0; i < idx; i++) {
+        node = node->next;
+    }
+
     node->next->prev = node->prev;
-    delete[] node->data;
+    node->prev->next = node->next;
+
     delete node;
+    size--;
+    return res;
 }
 
-char *BiList::get(int idx) {
-    if (head == nullptr) {
-        cout << "cannot get: empty\n";
-        return nullptr;
+template<class T>
+BiResult<T> BiList<T>::get(int idx) {
+    BiResult<T> res;
+    if (!(0 <= idx && idx < size)) {
+        res.error = outOfRange;
+        return res;
     }
 
     auto node = head;
-    int i = 0;
-    while (node->next != nullptr && i != idx) {
+    for (int i = 0; i < idx; i++) {
         node = node->next;
-        i++;
-    }
-    if (i != idx) {
-        cout << "cannot get: out of range\n";
-        return nullptr;
     }
 
-    return node->data;
+    res.node = node;
+    return res;
 }
 
-
-int BiList::find(char * s) {
-    int i = 0;
+template<class T>
+int BiList<T>::find(T & data) {
     auto node = head;
-    if (node == nullptr) {
-        cout << "cannot find: empty\n";
-        return -1;
-    }
-    while (node->next != nullptr) {
-        bool f = true;
-        for (int j = 0; j < STRING_SIZE && f; j++) {
-            if (node->data[j] != '\0' && s[j] != '\0') {
-                if (node->data[j] != s[j])
-                    f = false;
-            }
-        }
-        if (f)
+    int i = 0;
+    while (node != nullptr) {
+        if (node->data == data) {
             return i;
+        }
         i++;
         node = node->next;
     }
-    bool f = true;
-    for (int j = 0; j < STRING_SIZE && f; j++) {
-        if (node->data[j] != '\0' && s[j] != '\0') {
-            if (node->data[j] != s[j])
-                f = false;
-        }
-    }
-    if (f)
-        return i;
 
     return -1;
 }
 
-void BiList::print() {
-    auto node = head;
-    if (node == nullptr) {
-        cout << "empty\n";
+template<class T>
+void BiList<T>::print(std::ostream& stream) {
+    if (size == 0) {
+        stream << "empty\n";
         return;
     }
-
-    while (node->next != nullptr) {
-        cout << node->data << ' ';
+    auto node = head;
+    while (node != nullptr) {
+        stream << node->data << ' ';
         node = node->next;
     }
-    cout << node->data << '\n';
+    stream << '\n';
 }
 
-void BiList::clear() {
-    while (head != nullptr)
-        popFront();
+template<class T>
+void BiList<T>::clear() {
+    auto node = head;
+    while (node != nullptr) {
+        auto tmp = node->next;
+        delete node;
+        node = tmp;
+    }
+    head = nullptr;
+    tail = nullptr;
+    size = 0;
+}
+
+int mainBi() {
+    using namespace std;
+    int n, m, k;
+    BiList<string> list;
+    cout << "Size:\n";
+    cin >> n;
+    for (int i = 0; i < n; i++) {
+        string s;
+        cin >> s;
+        list.pushBack(s);
+    }
+    list.print(cout);
+
+    cout << "Delete:\n";
+    cin >> m;
+    list.remove(m - 1);
+    list.print(cout);
+    cout << "Key:\n";
+    string key;
+    cin >> key;
+    int idx = list.find(key);
+    cout << "Index: " << idx << '\n';
+    cout << "Amount:\n";
+    cin >> k;
+
+
+    cout << "First " << k << " words:\n";
+    for (int i = 0; i < k; i++) {
+        string s;
+        cin >> s;
+        list.insert(idx, s);
+        idx++;
+        list.print(cout);
+    }
+
+    idx++;
+    cout << "Second " << k << " words:\n";
+    for (int i = 0; i < k; i++) {
+        string s;
+        cin >> s;
+        list.insert(idx, s);
+        idx++;
+        list.print(cout);
+    }
+
+    fstream file("file.txt", ios::in | ios::out);
+    list.print(file);
+    file.seekp(0);
+
+    list.clear();
+    list.print(cout);
+    for (int i = 0; i < n - 1 + 2 * k; i++) {
+        string s;
+        file >> s;
+        list.pushBack(s);
+    }
+    file.close();
+    list.print(cout);
+    list.clear();
+
+    return 0;
 }
