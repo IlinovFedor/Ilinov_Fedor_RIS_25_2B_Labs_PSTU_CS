@@ -1,7 +1,7 @@
 #ifndef ILINOV_FEDOR_RIS_25_2B_LABS_PSTU_CS_UNI_H
 #define ILINOV_FEDOR_RIS_25_2B_LABS_PSTU_CS_UNI_H
 #include <iosfwd>
-#include "errors.h"
+#include "../errors.h"
 
 
 template<class T>

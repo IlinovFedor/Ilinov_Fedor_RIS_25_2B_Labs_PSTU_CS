@@ -301,11 +301,17 @@ class CppParser:
 
     def _try_parse_function(self):
         remaining = self._remaining()
-        pattern = r'((?:[\w:*&<>,\s]+?)\s+([\w:~]+)\s*\([^)]*\))\s*\{'
+        pattern = r'(template\s*<[^>]*>\s*)?((?:[\w:*&<>,\s]+?)\s+([\w:~<>]+)\s*\([^)]*\))\s*(const)?\s*\{'
         m = re.match(pattern, remaining)
         if not m:
             return None
-        signature = m.group(1).strip()
+        template_prefix = m.group(1) or ""
+        signature = m.group(2).strip()
+        const_suffix = m.group(4) or ""
+        if const_suffix:
+            signature = signature + " const"
+        if template_prefix:
+            signature = template_prefix.strip() + " " + signature
         first = signature.split()[0]
         if first in ('if', 'else', 'while', 'for', 'switch', 'do'):
             return None

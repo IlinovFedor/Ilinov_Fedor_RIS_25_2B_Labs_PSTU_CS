@@ -1,11 +1,11 @@
-#include "bidirectional.h"
-#include "errors.h"
+#include "unidirectional.h"
+#include "../errors.h"
 #include <iostream>
 #include <fstream>
 
 template<class T>
-void BiList<T>::pushBack(T& data) {
-    auto node = new BiNode<T>;
+void UniList<T>::pushBack(T& data) {
+    auto node = new UniNode<T>;
     node->data = data;
     if (size == 0) {
         head = node;
@@ -14,32 +14,37 @@ void BiList<T>::pushBack(T& data) {
         return;
     }
 
-    node->prev = tail;
     tail->next = node;
     tail = node;
     size++;
 }
 
 template<class T>
-void BiList<T>::popBack() {
+void UniList<T>::popBack() {
     if (size == 0)
         return;
 
-    auto del = tail;
-    tail = tail->prev;
-
-    if (tail != nullptr)
-        tail->next = nullptr;
-    else
+    if (size == 1) {
+        delete head;
         head = nullptr;
+        tail = nullptr;
+        size--;
+        return;
+    }
 
-    delete del;
+    auto node = head;
+    while (node->next != tail)
+        node = node->next;
+
+    delete tail;
+    tail = node;
+    tail->next = nullptr;
     size--;
 }
 
 template<class T>
-void BiList<T>::pushFront(T & data) {
-    auto node = new BiNode<T>;
+void UniList<T>::pushFront(T & data) {
+    auto node = new UniNode<T>;
     node->data = data;
     if (size == 0) {
         head = node;
@@ -49,22 +54,19 @@ void BiList<T>::pushFront(T & data) {
     }
 
     node->next = head;
-    head->prev = node;
     head = node;
     size++;
 }
 
 template<class T>
-void BiList<T>::popFront() {
+void UniList<T>::popFront() {
     if (size == 0)
         return;
 
     auto del = head;
     head = head->next;
 
-    if (head != nullptr)
-        head->prev = nullptr;
-    else
+    if (head == nullptr)
         tail = nullptr;
 
     delete del;
@@ -72,8 +74,8 @@ void BiList<T>::popFront() {
 }
 
 template<class T>
-BiResult<T> BiList<T>::insert(int idx, T & data) {
-    BiResult<T> res;
+UniResult<T> UniList<T>::insert(int idx, T & data) {
+    UniResult<T> res;
     if (idx == 0) {
         pushFront(data);
         return res;
@@ -88,18 +90,13 @@ BiResult<T> BiList<T>::insert(int idx, T & data) {
     }
 
     auto node = head;
-    for (int i = 0; i < idx; i++) {
+    for (int i = 0; i < idx - 1; i++)
         node = node->next;
-    }
 
-    auto newNode = new BiNode<T>;
+    auto newNode = new UniNode<T>;
     newNode->data = data;
-
-    node->prev->next = newNode;
-    newNode->prev = node->prev;
-
-    node->prev = newNode;
-    newNode->next = node;
+    newNode->next = node->next;
+    node->next = newNode;
 
     res.node = newNode;
     size++;
@@ -107,8 +104,8 @@ BiResult<T> BiList<T>::insert(int idx, T & data) {
 }
 
 template<class T>
-BiResult<T> BiList<T>::remove(int idx) {
-    BiResult<T> res;
+UniResult<T> UniList<T>::remove(int idx) {
+    UniResult<T> res;
     if (!(0 <= idx && idx < size)) {
         res.error = outOfRange;
         return res;
@@ -123,21 +120,19 @@ BiResult<T> BiList<T>::remove(int idx) {
     }
 
     auto node = head;
-    for (int i = 0; i < idx; i++) {
+    for (int i = 0; i < idx - 1; i++)
         node = node->next;
-    }
 
-    node->next->prev = node->prev;
-    node->prev->next = node->next;
-
-    delete node;
+    auto del = node->next;
+    node->next = del->next;
+    delete del;
     size--;
     return res;
 }
 
 template<class T>
-BiResult<T> BiList<T>::get(int idx) {
-    BiResult<T> res;
+UniResult<T> UniList<T>::get(int idx) {
+    UniResult<T> res;
     if (!(0 <= idx && idx < size)) {
         res.error = outOfRange;
         return res;
@@ -153,7 +148,7 @@ BiResult<T> BiList<T>::get(int idx) {
 }
 
 template<class T>
-int BiList<T>::find(T & data) {
+int UniList<T>::find(T & data) {
     auto node = head;
     int i = 0;
     while (node != nullptr) {
@@ -168,7 +163,7 @@ int BiList<T>::find(T & data) {
 }
 
 template<class T>
-void BiList<T>::print(std::ostream& stream) {
+void UniList<T>::print(std::ostream& stream) {
     if (size == 0) {
         stream << "empty\n";
         return;
@@ -182,7 +177,7 @@ void BiList<T>::print(std::ostream& stream) {
 }
 
 template<class T>
-void BiList<T>::clear() {
+void UniList<T>::clear() {
     auto node = head;
     while (node != nullptr) {
         auto tmp = node->next;
@@ -194,10 +189,10 @@ void BiList<T>::clear() {
     size = 0;
 }
 
-int mainBi() {
+int mainUni() {
     using namespace std;
     int n, m, k;
-    BiList<string> list;
+    UniList<string> list;
     cout << "Size:\n";
     cin >> n;
     for (int i = 0; i < n; i++) {

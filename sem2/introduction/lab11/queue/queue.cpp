@@ -1,37 +1,72 @@
-#include "stack.h"
-#include "errors.h"
+#include "../queue.h"
+#include "../errors.h"
 #include <iostream>
 
 template<class T>
-void Stack<T>::push(T &data) {
-    auto node = new StackNode<T>;
+void Queue<T>::pushBack(T& data) {
+    auto node = new QueueNode<T>;
     node->data = data;
     if (size == 0) {
         head = node;
+        tail = node;
         size++;
         return;
     }
 
-    node->next = head;
-    head = node;
+    tail->next = node;
+    tail = node;
     size++;
 }
 
 template<class T>
-void Stack<T>::pop() {
+void Queue<T>::popFront() {
     if (size == 0)
         return;
 
     auto del = head;
     head = head->next;
 
+    if (head == nullptr)
+        tail = nullptr;
+
     delete del;
     size--;
 }
 
 template<class T>
-StackResult<T> Stack<T>::peek() {
-    StackResult<T> res;
+QueueResult<T> Queue<T>::insert(int idx, T & data) {
+    QueueResult<T> res;
+    if (idx == 0) {
+        auto node = new QueueNode<T>;
+        node->data = data;
+        node->next = head;
+        head = node;
+        size++;
+        return res;
+    }
+
+    if (!(0 < idx && idx < size)) {
+        res.error = outOfRange;
+        return res;
+    }
+
+    auto node = head;
+    for (int i = 0; i < idx - 1; i++)
+        node = node->next;
+
+    auto newNode = new QueueNode<T>;
+    newNode->data = data;
+    newNode->next = node->next;
+    node->next = newNode;
+
+    res.node = newNode;
+    size++;
+    return res;
+}
+
+template<class T>
+QueueResult<T> Queue<T>::peek() {
+    QueueResult<T> res;
     if (head == nullptr) {
         res.error = outOfRange;
         return res;
@@ -40,8 +75,9 @@ StackResult<T> Stack<T>::peek() {
     return res;
 }
 
+
 template<class T>
-void Stack<T>::print(std::ostream &stream) {
+void Queue<T>::print(std::ostream& stream) {
     if (size == 0) {
         stream << "empty\n";
         return;
@@ -55,7 +91,7 @@ void Stack<T>::print(std::ostream &stream) {
 }
 
 template<class T>
-void Stack<T>::clear() {
+void Queue<T>::clear() {
     auto node = head;
     while (node != nullptr) {
         auto tmp = node->next;
@@ -63,15 +99,16 @@ void Stack<T>::clear() {
         node = tmp;
     }
     head = nullptr;
+    tail = nullptr;
     size = 0;
 }
 
-int mainStack() {
+int main() {
     using namespace std;
-    Stack<string> stack;
+    Queue<string> stack;
     bool f = true;
     while (f) {
-        cout << "a - add, c - clear, d - pop, e - exit, g - peek, p - print\n";
+        cout << "a - add, c - clear, d - pop, e - exit, g - peek, i - insert before, p - print\n";
         char cmd;
         string s;
         cin >> cmd;
@@ -79,13 +116,13 @@ int mainStack() {
             case 'a':
                 cout << "Enter value: ";
                 cin >> s;
-                stack.push(s);
+                stack.pushBack(s);
                 break;
             case 'c':
                 stack.clear();
                 break;
             case 'd':
-                stack.pop();
+                stack.popFront();
                 break;
             case 'e':
                 f = false;
@@ -99,6 +136,14 @@ int mainStack() {
                 cout << peek.node->data << '\n';
                 break;
             }
+            case 'i':
+                int idx;
+                cout << "Enter index: ";
+                cin >> idx;
+                cout << "Enter value: ";
+                cin >> s;
+                stack.insert(idx, s);
+                break;
             case 'p':
                 stack.print(cout);
                 break;

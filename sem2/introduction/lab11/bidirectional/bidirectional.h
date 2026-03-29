@@ -1,8 +1,7 @@
 #ifndef ILINOV_FEDOR_RIS_25_2B_LABS_PSTU_CS_BI_H
 #define ILINOV_FEDOR_RIS_25_2B_LABS_PSTU_CS_BI_H
 #include <iosfwd>
-#include "errors.h"
-
+#include "../errors.h"
 
 template<class T>
 struct BiNode {
@@ -39,4 +38,4 @@ struct BiList {
 };
 
 #include "bidirectional.cpp"
-#endif //ILINOV_FEDOR_RIS_25_2B_LABS_PSTU_CS_BI_H
+#endif ILINOV_FEDOR_RIS_25_2B_LABS_PSTU_CS_BI_H
