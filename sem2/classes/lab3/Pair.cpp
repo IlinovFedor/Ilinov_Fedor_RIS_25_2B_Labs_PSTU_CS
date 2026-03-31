@@ -43,13 +43,6 @@ Pair &Pair::operator=(Pair const &p) {
     return *this;
 }
 
-Pair & operator++(Pair & p) {
-    Pair tmp = p;
-    p.first++;
-    p.second++;
-    return p;
-}
-
 std::ostream &operator<<(std::ostream &stream, const Pair &p) {
     std::cout << p.first << " : " << p.second << '\n';
     return stream;

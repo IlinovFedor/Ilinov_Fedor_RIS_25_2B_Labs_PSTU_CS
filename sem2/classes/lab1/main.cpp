@@ -3,7 +3,14 @@
 
 using namespace std;
 
+Pair makePair(int i, double d) {
+    Pair p;
+    p.init(d, i);
+    return p;
+}
+
 int main() {
+    cout << "привет\n";
     Pair f;
     f.read();
     f.show();

@@ -23,7 +23,6 @@ public:
 
     void setInt(int);
 
-    Pair &operator=(Pair const &p);
 
     Pair operator+(Pair &p);
 
@@ -31,7 +30,7 @@ public:
 
     Pair operator+(double);
 
-    friend Pair &operator ++(Pair &);
+    Pair &operator=(Pair const &p);
 
     friend std::ostream &operator<<(std::ostream &, const Pair &);
 
