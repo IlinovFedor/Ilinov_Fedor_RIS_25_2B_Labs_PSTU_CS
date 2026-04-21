@@ -6,8 +6,6 @@ int naturalGetSeries(const std::string &workPath, const std::string &buf1Path, c
     std::ifstream work(workPath);
     std::ofstream buf1(buf1Path), buf2(buf2Path);
     std::ofstream *bufs[] = {&buf1, &buf2};
-    buf1 << std::unitbuf;
-    buf2 << std::unitbuf;
     int prev = INT_MIN, cnt = 1, cur = 0;
     int a;
     while (work >> a) {
@@ -32,7 +30,6 @@ void naturalMerge(const std::string &workPath, const std::string &buf1Path,
         return;
     std::ifstream buf1(buf1Path), buf2(buf2Path);
     std::ofstream work(workPath);
-    work << std::unitbuf;
 
     for (int i = 0; i < (series + 1) / 2; i++) {
         std::string a, b;

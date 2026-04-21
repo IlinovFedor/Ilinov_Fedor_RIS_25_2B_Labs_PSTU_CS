@@ -53,7 +53,7 @@
   - Quick sort (Hoare)
   - Quick sort (Lomuto)
 
-- [ ] [Внешние сортировки](/sem2/homeworks_2/external_sorts)
+- [x] [Внешние сортировки](/sem2/homeworks_2/external_sorts)
   - Естественное слияние
   - Многопутевое слияние
   - Многофазная сортировка
