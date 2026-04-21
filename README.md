@@ -48,7 +48,7 @@
   - Сортировка подсчётом (counting sort)
   - Bucket sort
 
-- [ ] [Быстрые сортировки](/sem2/homeworks_2/quick_sorts)
+- [x] [Быстрые сортировки](/sem2/homeworks_2/quick_sorts)
   - Shell sort
   - Quick sort (Hoare)
   - Quick sort (Lomuto)
@@ -56,7 +56,7 @@
 - [ ] [Внешние сортировки](/sem2/homeworks_2/external_sorts)
   - Естественное слияние
   - Многопутевое слияние
-  - №3
+  - Многофазная сортировка
 
 - [ ] [Хэш-таблицы](/sem2/homeworks_2/hash_tables)
 
