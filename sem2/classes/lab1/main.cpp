@@ -10,7 +10,6 @@ Pair makePair(int i, double d) {
 }
 
 int main() {
-    cout << "привет\n";
     Pair f;
     f.read();
     f.show();

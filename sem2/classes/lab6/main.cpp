@@ -4,6 +4,9 @@
 using namespace std;
 
 int main() {
+    int arr[] = {1, 2, 3, 4, 5};
+    for (int l : arr)
+        cout << l << ' ';
     BiList list1, list2;
     cin >> list1 >> list2;
     BiList list3 = list2;
@@ -18,8 +21,6 @@ int main() {
         cout << i << ':';
     }
     cout << '\n';
-    for (Iterator iter = list1.begin(); iter != list2.end(); ++iter)
-        cout << iter.value() << ' ';
     cout << '\n';
 
     auto iter = list1.begin();
