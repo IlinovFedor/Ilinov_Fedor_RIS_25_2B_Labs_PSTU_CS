@@ -11,12 +11,8 @@ void shellSort(int a[], int n) {
                 a[j] = a[j - step];
             a[j] = tmp;
         }
+        cout << "\tstep = " << step << ' ';
+        for (int x = 0; x < n; x++) cout << a[x] << ' ';
+        cout << '\n';
     }
-}
-
-int main() {
-    int a[] = {56, 43, 12, 78, 42, 93, 16, 55};
-    //int a[] = {3, 7, 8, 5, 2, 1, 9, 5, 4};
-    shellSort(a, 8);
-    for (auto i : a) cout << i << ' ';
 }

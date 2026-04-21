@@ -3,33 +3,31 @@
 using namespace std;
 
 int partition(int a[], int l, int r) {
-    int p = a[r];
-    int n = l;
-    for (int i = l; i < r; i++) {
-        if (a[i] <= p) {
-            int tmp = a[n];
-            a[n] = a[i];
-            a[i] = tmp;
-            n++;
+    int i = l;
+    int j = r;
+    while (i < j) {
+        if (a[i] > a[j]) {
+            int tmp = a[j];
+            a[j] = a[i];
+            a[i] = a[j - 1];
+            a[j - 1] = tmp;
+            j--;
+            i--;
         }
+        i++;
     }
-    int tmp = a[n];
-    a[n] = a[r];
-    a[r] = tmp;
-    return n;
+    return j;
 }
 
 void lomutoSort(int a[], int l, int r) {
-    if (r - l < 1)
-        return;
-    int p = partition(a, l, r);
-    lomutoSort(a, l, p - 1);
-    lomutoSort(a, p + 1, r);
-}
-
-int main() {
-    int a[] = {56, 55, 12, 78, 42, 93, 16, 55};
-    //int a[] = {3, 7, 8, 5, 2, 1, 9, 5, 4};
-    lomutoSort(a, 0, 7);
-    for (auto i : a) cout << i << ' ';
+    if (r - l > 0) {
+        int p = partition(a, l, r);
+        cout << "\t[ ";
+        for (int i = l; i <= p; i++) cout << a[i] << ' ';
+        cout << "][ ";
+        for (int i = p + 1; i <= r; i++) cout << a[i] << ' ';
+        cout << "]\n";
+        lomutoSort(a, l, p - 1);
+        lomutoSort(a, p + 1, r);
+    }
 }
