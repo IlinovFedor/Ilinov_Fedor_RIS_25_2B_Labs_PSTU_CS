@@ -42,18 +42,6 @@ void hoarSort(T* a, int l, int r) {
 
 constexpr long long N = 8LL;
 int main() {
-    // int* a = new int[N];
-    // uint64_t seed = 123456789;
-    //
-    // auto fast_rand = [&]() {
-    //     seed ^= seed << 13;
-    //     seed ^= seed >> 7;
-    //     seed ^= seed << 17;
-    //     return (int)seed;
-    // };
-    //
-    // for (long long i = 0; i < N; ++i)
-    //     a[i] = fast_rand() % 10;
     int a[] = {2, 4, 6, 8, 1, 5, 3, 7};
     cout << "Nums generated\n";
     for (int i = 0; i < N; i++) cout << a[i] << ' ';
@@ -66,6 +54,5 @@ int main() {
 
 
     for (int i = 0; i < N; i++) cout << a[i] << ' ';
-    cout << '\n'
-    //delete[] a;
+    cout << '\n';
 }
