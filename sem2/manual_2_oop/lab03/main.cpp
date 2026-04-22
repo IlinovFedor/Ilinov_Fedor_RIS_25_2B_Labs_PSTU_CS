@@ -10,7 +10,6 @@ int main() {
     Pair pair1;
     cout << "Pair 1?\n";
     cin >> pair1;
-    cout << ++pair1;
     cout << pair1;
     Pair pair2;
     cout << "Pair 2?\n";

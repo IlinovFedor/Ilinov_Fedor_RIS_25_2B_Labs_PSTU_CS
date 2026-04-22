@@ -9,17 +9,17 @@ class Salary {
     double baseSalary;
     std::string marshal();
 public:
-    Salary();//конструктор без параметров
-    Salary(std::string, int, double);//конструктор с параметрами
-    Salary(const Salary&);//конструктор копирования
-    ~Salary();//деструктор
-    std::string getName();//селектор
-    void setName(std::string);//модификатор
-    int getBaseSalary();//селектор
-    void setBaseSalary(double); //модификатор
-    double getBonusPercents();//селектор
-    void setBonusPercents(int); //модификатор
-    void show();//просмотр атрибутов
+    Salary();
+    Salary(std::string, int, double);
+    Salary(const Salary&);
+    ~Salary();
+    std::string getName();
+    void setName(std::string);
+    int getBaseSalary();
+    void setBaseSalary(double);
+    double getBonusPercents();
+    void setBonusPercents(int);
+    void show();
 };
 
 

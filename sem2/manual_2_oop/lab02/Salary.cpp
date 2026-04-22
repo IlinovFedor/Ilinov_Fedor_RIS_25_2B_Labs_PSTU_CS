@@ -12,7 +12,6 @@ std::string Salary::marshal()  {
     return res;
 }
 
-//конструктор без параметров
 Salary::Salary() {
     name = "";
     bonusPercents = 0;
@@ -20,7 +19,6 @@ Salary::Salary() {
     std::cout << "Constructor without params:\n" << marshal() << '\n';
 }
 
-//конструктор с параметрами
 Salary::Salary(std::string N, int K, double S) {
     name = N;
     bonusPercents = K;
@@ -28,7 +26,6 @@ Salary::Salary(std::string N, int K, double S) {
     std::cout << "Constructor with params:\n" << marshal() << '\n';
 }
 
-//конструктор копирования
 Salary::Salary(const Salary &t) {
     name = t.name;
     bonusPercents = t.bonusPercents;
@@ -36,12 +33,10 @@ Salary::Salary(const Salary &t) {
     std::cout << "Copy constructor:\n" << marshal() << '\n';
 }
 
-//деструктор
 Salary::~Salary() {
     std::cout << "Destructor:\n" << marshal() << '\n';
 }
 
-//селекторы
 std::string Salary::getName() {
     return name;
 }
@@ -54,7 +49,6 @@ int Salary::getBaseSalary() {
     return baseSalary;
 }
 
-//модификаторы
 void Salary::setName(std::string N) {
     name = N;
 }
@@ -67,7 +61,6 @@ void Salary::setBaseSalary(double S) {
     baseSalary = S;
 }
 
-//метод для просмотра атрибутов
 void Salary::show() {
     std::cout << marshal();
 }
