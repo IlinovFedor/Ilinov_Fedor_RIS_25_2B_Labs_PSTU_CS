@@ -10,7 +10,6 @@
 class Student : public Person {
     std::string subject;
     int grade;
-
 public:
     Student();
     Student(std::string name, int age, std::string subject, int grade);
@@ -25,6 +24,7 @@ public:
     friend std::ostream &operator<<(std::ostream &, Student &);
     friend std::istream &operator>>(std::istream &, Student &);
     void show();
+    bool isOk() {return grade > 2;};
 };
 
 

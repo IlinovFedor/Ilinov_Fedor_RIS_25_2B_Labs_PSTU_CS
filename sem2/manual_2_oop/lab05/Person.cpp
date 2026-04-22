@@ -53,7 +53,7 @@ void Person::show() {
 }
 
 std::ostream &operator<<(std::ostream &stream, const Person &p) {
-    std::cout << p.name << " : " << p.age << '\n';
+    stream << p.name << " : " << p.age << '\n';
     return stream;
 }
 

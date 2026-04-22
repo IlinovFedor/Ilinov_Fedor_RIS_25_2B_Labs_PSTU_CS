@@ -7,13 +7,13 @@
 #include <iostream>
 
 Vector::Vector() {
-    beg = 0;
+    beg = nullptr;
     size = 0;
     cur = 0;
 }
 
 Vector::~Vector() {
-    if (beg != 0)delete [] beg;
+    if (beg != nullptr)delete [] beg;
     beg = 0;
 }
 
@@ -23,7 +23,7 @@ Vector::Vector(int n) {
     size = n;
 }
 
-void Vector::add(Object *p) {
+void Vector::Add(Object *p) {
     if (cur < size) {
         beg[cur] = p;
         cur++;

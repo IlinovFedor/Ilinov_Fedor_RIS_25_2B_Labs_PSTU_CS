@@ -15,7 +15,7 @@ public:
     Vector();
     Vector(int);
     ~Vector();
-    void add(Object *);
+    void Add(Object *);
     friend std::ostream &operator<<(std::ostream &out, const Vector &);
 };
 

@@ -56,7 +56,9 @@ Student &Student::operator=(Student &p) {
 }
 
 std::ostream &operator<<(std::ostream &stream, Student &p) {
-    std::cout << p.getName() << " : " << p.getAge() << " / " << p.getSubject() << " : " << p.getGrade() << '\n';
+    stream << p.getName() << " : " << p.getAge() << " / " << p.getSubject() << " : " << p.getGrade();
+    if (!p.isOk()) stream << " not ok :(";
+    stream << '\n';
     return stream;
 }
 

@@ -5,7 +5,7 @@ using namespace std;
 
 int main() {
     int arr[] = {1, 2, 3, 4, 5};
-    for (int l : arr)
+    for (int l: arr)
         cout << l << ' ';
     BiList list1, list2;
     cin >> list1 >> list2;
@@ -17,7 +17,7 @@ int main() {
 
     cout << list1 * list3;
 
-    for (auto i : list1) {
+    for (auto i: list1) {
         cout << i << ':';
     }
     cout << '\n';
