@@ -3,6 +3,9 @@
 #include <iostream>
 #include <fstream>
 
+#ifndef ILINOV_FEDOR_RIS_25_2B_LABS_PSTU_CS_UNI_CPP
+#define ILINOV_FEDOR_RIS_25_2B_LABS_PSTU_CS_UNI_CPP
+
 template<class T>
 void UniList<T>::pushBack(T& data) {
     auto node = new UniNode<T>;
@@ -189,6 +192,8 @@ void UniList<T>::clear() {
     size = 0;
 }
 
+
+#ifndef UNI_EXPORT
 int mainUni() {
     using namespace std;
     int n, m, k;
@@ -251,3 +256,6 @@ int mainUni() {
 
     return 0;
 }
+#endif
+
+#endif
