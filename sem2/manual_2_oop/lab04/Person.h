@@ -16,7 +16,7 @@ public:
 
     Person(std::string, int);
 
-    Person(Person&);
+    Person(Person &);
 
     ~Person();
 
@@ -24,7 +24,7 @@ public:
 
     void setName(std::string);
 
-    const  int getAge();
+    const int getAge();
 
     void setAge(int);
 
