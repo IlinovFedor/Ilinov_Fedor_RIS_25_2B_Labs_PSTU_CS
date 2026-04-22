@@ -43,7 +43,7 @@
   - БМ (Бойер-Мур)
   - КМП (Кнут-Моррис-Пратт)
 
-- [x] Простые сортировки. Читал лекцию.
+- [x] [Простые сортировки. Читал лекцию.](sem2/homeworks_2/simple_sorts)
   - Сортировка слиянием (merge sort)
   - Сортировка подсчётом (counting sort)
   - Bucket sort
@@ -78,5 +78,4 @@
 ### Графы (все с визуализацией)
 
 - [ ] Простые графы: +-V, +-E, correct E & m, DFS, BFS, DIJKSTRA, HLOYD-WARSHAU + UML и отчеты
-- [ ] BST: find/add/remove, балансировка, обходы (incorder, preorder, pastorder), печать 
-- [ ] 
+- [ ] BST: find/add/remove, балансировка, обходы (incorder, preorder, pastorder), печать
