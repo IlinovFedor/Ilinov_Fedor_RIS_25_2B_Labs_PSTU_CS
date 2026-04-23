@@ -55,7 +55,7 @@ bool Pair::operator>(Pair const &p) const {
     return p < *this;
 }
 
-Pair & Pair::operator+=(Pair const &p) {
+Pair & Pair::operator+=(const Pair &p) {
     this->first += p.first;
     this->second += p.second;
     return *this;
@@ -92,6 +92,13 @@ std::istream &operator>>(std::istream &stream, Pair &p) {
 }
 
 Pair Pair::operator+(Pair &p) {
+    Pair second(*this);
+    second.second += p.second;
+    second.first += p.first;
+    return second;
+}
+
+Pair Pair::operator+(const Pair &p) const {
     Pair second(*this);
     second.second += p.second;
     second.first += p.first;

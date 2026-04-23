@@ -238,6 +238,8 @@ def parse_param(text: str) -> Param:
         return Param("", None)
     if '=' in txt:
         txt = txt.split('=', 1)[0].strip()
+    txt = re.sub(r'\s*&\s*([A-Za-z_][A-Za-z0-9_]*)\s*$', r' &\1', txt)
+    txt = re.sub(r'\s*\*\s*([A-Za-z_][A-Za-z0-9_]*)\s*$', r' *\1', txt)
     m = re.search(r'([A-Za-z_][A-Za-z0-9_]*)\s*$', txt)
     if not m:
         return Param(txt.strip(), None)
@@ -249,8 +251,12 @@ def parse_param(text: str) -> Param:
         return Param(txt.strip(), None)
     if type_part.endswith("<") or type_part.endswith(","):
         return Param(txt.strip(), None)
-    # If type ends with pointer/reference, treat as type-only (no name)
+    # If type ends with pointer/reference, attach to type and keep name
     if type_part.endswith("&") or type_part.endswith("*"):
+        ref = type_part[-1]
+        base = type_part[:-1].strip()
+        if base:
+            return Param(f"{base} {ref}", name)
         return Param(txt.strip(), None)
     # If token looks like a type (std::string), keep full text as type-only
     if "::" in txt:
@@ -395,39 +401,73 @@ def split_type_and_name(part: str) -> Tuple[str, Optional[str]]:
 
 def parse_classes(text: str) -> List[ClassDef]:
     cleaned = strip_comments(text)
+    # strip template parameter lists to avoid false class matches
+    cleaned = re.sub(r'template\s*<[^>]*>', ' ', cleaned)
     classes: List[ClassDef] = []
     i = 0
     pattern = re.compile(r'\b(class|struct)\s+(\w+)')
+
+    brace_depth = 0
+    angle_depth = 0
+    in_str: Optional[str] = None
+
     while i < len(cleaned):
-        m = pattern.search(cleaned, i)
-        if not m:
-            break
-        kind = m.group(1)
-        name = m.group(2)
-        brace = cleaned.find('{', m.end())
-        if brace == -1:
-            i = m.end()
+        ch = cleaned[i]
+        if in_str:
+            if ch == in_str and cleaned[i - 1] != '\\':
+                in_str = None
+            i += 1
             continue
-        header = cleaned[m.end():brace]
-        bases = []
-        if ':' in header:
-            _, base_part = header.split(':', 1)
-            for b in base_part.split(','):
-                b = b.strip()
-                if not b:
-                    continue
-                b = re.sub(r'\b(public|private|protected|virtual)\b', '', b).strip()
-                if b:
-                    bases.append(b)
-        end = find_matching_brace(cleaned, brace)
-        if end == -1:
-            i = brace + 1
+        if ch in ('"', "'"):
+            in_str = ch
+            i += 1
             continue
-        body = cleaned[brace + 1:end]
-        default_access = "private" if kind == "class" else "public"
-        fields, methods, friends = parse_class_body(body, name, default_access)
-        classes.append(ClassDef(name=name, kind=kind, bases=bases, fields=fields, methods=methods, friends=friends))
-        i = end + 1
+        if ch == '{':
+            brace_depth += 1
+        elif ch == '}':
+            brace_depth = max(0, brace_depth - 1)
+        elif ch == '<':
+            angle_depth += 1
+        elif ch == '>':
+            angle_depth = max(0, angle_depth - 1)
+
+        m = pattern.match(cleaned, i)
+        if m and brace_depth == 0 and angle_depth == 0:
+            kind = m.group(1)
+            name = m.group(2)
+            brace = cleaned.find('{', m.end())
+            semi = cleaned.find(';', m.end())
+            if semi != -1 and (brace == -1 or semi < brace):
+                i = semi + 1
+                continue
+            if brace == -1:
+                i = m.end()
+                continue
+            header = cleaned[m.end():brace]
+            bases = []
+            if ':' in header:
+                _, base_part = header.split(':', 1)
+                for b in base_part.split(','):
+                    b = b.strip()
+                    if not b:
+                        continue
+                    b = re.sub(r'\b(public|private|protected|virtual)\b', '', b).strip()
+                    if b:
+                        bases.append(b)
+            end = find_matching_brace(cleaned, brace)
+            if end == -1:
+                i = brace + 1
+                continue
+            body = cleaned[brace + 1:end]
+            default_access = "private" if kind == "class" else "public"
+            fields, methods, friends = parse_class_body(body, name, default_access)
+            classes.append(ClassDef(name=name, kind=kind, bases=bases, fields=fields, methods=methods, friends=friends))
+            i = end + 1
+            brace_depth = 0
+            angle_depth = 0
+            continue
+
+        i += 1
     return classes
 
 
@@ -540,10 +580,17 @@ def format_params(params: List[Param]) -> str:
     for p in params:
         if not p.type and not p.name:
             continue
+        ptype = normalize_type_display(p.type)
         if p.name:
-            parts.append(f"{p.name} : {normalize_type_display(p.type)}")
+            pname = p.name.strip()
+            if pname.startswith('&') or pname.startswith('*'):
+                pname = pname[1:].strip()
+            if ptype.endswith('&') or ptype.endswith('*'):
+                parts.append(f"{pname} : {ptype}")
+            else:
+                parts.append(f"{pname} : {ptype}")
         else:
-            parts.append(normalize_type_display(p.type))
+            parts.append(ptype)
     return ", ".join(parts)
 
 
@@ -616,7 +663,6 @@ def make_div_lines(lines: List[str]) -> str:
             out.append("<div><br></div>")
         else:
             val = html.escape(line)
-            val = val.replace("&amp;", "&amp;amp;")
             out.append(f"<div>{val}</div>")
     return "".join(out)
 
@@ -790,12 +836,13 @@ def build_drawio(boxes: List[ClassBox], edges: List[Tuple[str, str, str, str]]) 
 
 
 def collect_headers(path: str) -> List[str]:
-    if os.path.isfile(path) and path.endswith('.h'):
+    exts = ('.h', '.hpp', '.hh', '.hxx')
+    if os.path.isfile(path) and path.endswith(exts):
         return [path]
     headers = []
     for root, _, files in os.walk(path):
         for f in files:
-            if f.endswith('.h'):
+            if f.endswith(exts):
                 headers.append(os.path.join(root, f))
     return headers
 
