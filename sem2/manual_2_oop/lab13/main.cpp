@@ -4,8 +4,8 @@
 #include <queue>
 #include <random>
 #include <algorithm>
-#include <numeric>
 #include "Pair.h"
+#include "PriorityQueue.h"
 
 std::random_device rd;
 std::mt19937 gen(rd());
@@ -13,9 +13,9 @@ std::mt19937 gen(rd());
 template<class T>
 void printItem(const T& i) { std::cout << i << ' '; }
 
-void printPair(const std::pair<const Pair, int>& kv) { std::cout << kv.first << ' '; }
+void printPair(const std::pair<const Pair, int>& pair) { std::cout << "([" << pair.first << "] = " << pair.second << ") "; }
 
-Pair extractKey(const std::pair<const Pair, int>& kv) { return kv.first; }
+Pair extractKey(const std::pair<const Pair, int>& pair) { return pair.first; }
 
 template<class T>
 void printContainerAfterSubtask(const T& l) {
@@ -115,14 +115,14 @@ void task_1() {
 }
 
 template<class T>
-std::priority_queue<T> copyBiListToSTLPriorityQueue(const std::vector<T>& bl) {
-    std::priority_queue<T> q;
+PriorityQueue<T> copyBiListToSTLPriorityQueue(const std::vector<T>& bl) {
+    PriorityQueue<T> q;
     std::for_each(bl.begin(), bl.end(), [&q](const T& i){ q.push(i); });
     return q;
 }
 
 template<class T>
-std::vector<T> copySTLPriorityQueueToBiList(std::priority_queue<T>& q) {
+std::vector<T> copySTLPriorityQueueToBiList(PriorityQueue<T>& q) {
     std::vector<T> bl;
     while (!q.empty()) {
         bl.push_back(q.top());
@@ -133,15 +133,15 @@ std::vector<T> copySTLPriorityQueueToBiList(std::priority_queue<T>& q) {
 }
 
 template<class T>
-void printSTLPriorityQueue(std::priority_queue<T>& q) {
+void printSTLPriorityQueue(PriorityQueue<T>& q) {
     auto v = copySTLPriorityQueueToBiList(q);
     std::for_each(v.begin(), v.end(), printItem<T>);
     std::cout << '\n';
 }
 
 void task_2() {
-    std::cout << "task 4\n";
-    std::priority_queue<Pair> q;
+    std::cout << "task 2\n";
+    PriorityQueue<Pair> q;
 
     std::uniform_int_distribution<> dist(0, 9);
     for (int i = 0; i < 10; i++) {
@@ -182,7 +182,7 @@ void task_2() {
 }
 
 void task_3() {
-    std::cout << "task 4\n";
+    std::cout << "task 3\n";
     std::map<Pair, int> mp;
 
     std::uniform_int_distribution<> dist(0, 9);

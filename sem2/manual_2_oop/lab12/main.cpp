@@ -2,7 +2,7 @@
 #include <set>
 #include <random>
 #include "Pair.h"
-#include "list.hpp"
+#include "MultiSet.hpp"
 
 std::random_device rd;
 std::mt19937 gen(rd());
@@ -127,25 +127,25 @@ void task_2() {
 void task_3() {
     std::cout << "task 3\n";
 
-    List<Pair> list;
+    MultiSet<Pair> ms;
     std::uniform_int_distribution<> dist(0, 9);
     for (int i = 0; i < 10; i++) {
         Pair p((double)dist(gen) / 10, dist(gen));
-        list.insert(p);
+        ms.insert(p);
     }
 
     std::cout << '\t';
-    for (auto &i: list) std::cout << i << ' ';
+    for (auto &i: ms) std::cout << i << ' ';
     std::cout << '\n';
 
-    list = subtask1(list);
-    printContainerAfterSubtask(list);
+    ms = subtask1(ms);
+    printContainerAfterSubtask(ms);
 
-    list = subtask2(list);
-    printContainerAfterSubtask(list);
+    ms = subtask2(ms);
+    printContainerAfterSubtask(ms);
 
-    list = subtask3(list);
-    printContainerAfterSubtask(list);
+    ms = subtask3(ms);
+    printContainerAfterSubtask(ms);
 }
 
 int main() {
