@@ -35,6 +35,7 @@ void GraphWorker::draw_tree() {
     scene->clear();
     vertices.clear();
     edges.clear();
+    edge_matrix.clear();
 
     int n = graph.size();
     if (n == 0) return;
@@ -104,6 +105,8 @@ void GraphWorker::draw_tree() {
         vertices.push_back(v);
     }
 
+    edge_matrix.assign(n, std::vector<UiEdge*>(n, nullptr));
+
     // --- 5. Создаём рёбра ---
     for (int i = 0; i < n; i++) {
         for (int j = i + 1; j < n; j++) {
@@ -114,6 +117,10 @@ void GraphWorker::draw_tree() {
                 if (graph.has_edge(j, i))
                     e->set_j_i_weight(graph.get_weight(j, i));
                 edges.push_back(e);
+                if (graph.has_edge(i, j))
+                    edge_matrix[i][j] = e;
+                if (graph.has_edge(j, i))
+                    edge_matrix[j][i] = e;
             }
         }
     }
@@ -126,6 +133,7 @@ void GraphWorker::draw_not_tree() {
     scene->clear();
     vertices.clear();
     edges.clear();
+    edge_matrix.clear();
 
     int n = graph.size();
     if (n == 0) return;
@@ -143,6 +151,8 @@ void GraphWorker::draw_not_tree() {
         vertices.push_back(v);
     }
 
+    edge_matrix.assign(n, std::vector<UiEdge*>(n, nullptr));
+
     for (int i = 0; i < n; i++) {
         for (int j = i + 1; j < n; j++) {
             if (graph.has_edge(i, j) || graph.has_edge(j, i)) {
@@ -152,6 +162,10 @@ void GraphWorker::draw_not_tree() {
                 if (graph.has_edge(j, i))
                     e->set_j_i_weight(graph.get_weight(j, i));
                 edges.push_back(e);
+                if (graph.has_edge(i, j))
+                    edge_matrix[i][j] = e;
+                if (graph.has_edge(j, i))
+                    edge_matrix[j][i] = e;
             }
         }
     }
@@ -200,4 +214,147 @@ void GraphWorker::draw_graph() {
         return;
     }
     draw_not_tree();
+}
+
+void GraphWorker::dfs_prepare(int start_index) {
+    steps.clear();
+    step_index = 0;
+
+    int n = graph.size();
+    if (n == 0) return;
+    if (start_index < 0 || start_index >= n) return;
+
+    std::vector<bool> visited(n, false);
+    std::vector<int> parent(n, -1);
+
+    struct Frame {
+        int v;
+        int next;
+    };
+
+    std::vector<Frame> stack;
+    stack.push_back({start_index, 0});
+    visited[start_index] = true;
+
+    Step root_step;
+    root_step.type = Step::VertexAdvance;
+    root_step.cur_v = start_index;
+    steps.push_back(root_step);
+
+    while (!stack.empty()) {
+        Frame &frame = stack.back();
+        int v = frame.v;
+
+        bool moved = false;
+        for (int j = frame.next; j < n; j++) {
+            frame.next = j + 1;
+            if (graph.has_edge(v, j) && !visited[j]) {
+                parent[j] = v;
+                visited[j] = true;
+
+                Step edge_step;
+                edge_step.type = Step::EdgeActivate;
+                edge_step.from = v;
+                edge_step.to = j;
+                steps.push_back(edge_step);
+
+                Step vertex_step;
+                vertex_step.type = Step::VertexAdvance;
+                vertex_step.prev_v = v;
+                vertex_step.cur_v = j;
+                vertex_step.from = v;
+                vertex_step.to = j;
+                steps.push_back(vertex_step);
+
+                stack.push_back({j, 0});
+                moved = true;
+                break;
+            }
+        }
+
+        if (moved) continue;
+
+        stack.pop_back();
+        if (parent[v] != -1) {
+            Step back_step;
+            back_step.type = Step::VertexAdvance;
+            back_step.prev_v = v;
+            back_step.cur_v = parent[v];
+            steps.push_back(back_step);
+        }
+    }
+}
+
+void GraphWorker::dfs_step_next() {
+    if (step_index >= steps.size()) return;
+
+    Step step = steps[step_index];
+    step_index++;
+
+    if (step.type == Step::EdgeActivate) {
+        for (auto *vertex : vertices) {
+            vertex->dis_activate();
+            vertex->update();
+        }
+
+        if (step.from >= 0 && step.from < static_cast<int>(vertices.size())) {
+            vertices[step.from]->activate();
+            vertices[step.from]->update();
+        }
+
+        if (step.from >= 0 && step.to >= 0
+            && step.from < static_cast<int>(edge_matrix.size())
+            && step.to < static_cast<int>(edge_matrix.size())) {
+            UiEdge *edge = edge_matrix[step.from][step.to];
+            if (edge) {
+                if (step.from < step.to)
+                    edge->activate_i_j();
+                else if (step.from > step.to)
+                    edge->activate_j_i();
+                edge->update();
+            }
+        }
+        return;
+    }
+
+    if (step.type == Step::VertexAdvance) {
+        for (auto *vertex : vertices) {
+            vertex->dis_activate();
+            vertex->update();
+        }
+
+        if (step.from >= 0 && step.to >= 0
+            && step.from < static_cast<int>(edge_matrix.size())
+            && step.to < static_cast<int>(edge_matrix.size())) {
+            UiEdge *edge = edge_matrix[step.from][step.to];
+            if (edge) {
+                edge->dis_activate_i_j();
+                edge->dis_activate_j_i();
+                edge->update();
+            }
+        }
+
+        if (step.cur_v >= 0 && step.cur_v < static_cast<int>(vertices.size())) {
+            vertices[step.cur_v]->set_used();
+            vertices[step.cur_v]->activate();
+            vertices[step.cur_v]->update();
+        }
+    }
+}
+
+void GraphWorker::dfs_reset() {
+    steps.clear();
+    step_index = 0;
+
+    for (auto *vertex : vertices) {
+        vertex->dis_activate();
+        vertex->set_unused();
+        vertex->update();
+    }
+
+    for (auto *edge : edges) {
+        edge->dis_activate_i_j();
+        edge->dis_activate_j_i();
+        edge->update();
+    }
 }

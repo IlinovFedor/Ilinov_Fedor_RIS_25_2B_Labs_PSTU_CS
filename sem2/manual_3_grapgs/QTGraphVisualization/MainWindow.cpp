@@ -61,6 +61,10 @@ MainWindow::MainWindow() : QWidget(nullptr){
 
     connect(zoom_in, &QPushButton::clicked, this, &MainWindow::on_zoom_in_clicked);
     connect(zoom_out, &QPushButton::clicked, this, &MainWindow::on_zoom_out_clicked);
+
+    connect(run_dfs, &QPushButton::clicked, this, &MainWindow::on_run_dfs_clicked);
+    connect(next, &QPushButton::clicked, this, &MainWindow::on_next_clicked);
+    connect(reset, &QPushButton::clicked, this, &MainWindow::on_reset_clicked);
 }
 
 void MainWindow::on_edit_matrix_clicked() {
@@ -87,4 +91,37 @@ void MainWindow::on_generate_tree_clicked() {
 void MainWindow::on_generate_random_clicked() {
     worker->graph.generateRandom(5, 10, 0.3);
     worker->draw_graph();
+}
+
+void MainWindow::on_run_dfs_clicked() {
+    int n = worker->graph.size();
+    if (n == 0) return;
+
+    QDialog dialog(this);
+    dialog.setWindowTitle("DFS start vertex");
+
+    auto *layout = new QVBoxLayout(&dialog);
+    auto *spin = new QSpinBox(&dialog);
+    spin->setRange(1, n);
+    spin->setValue(1);
+
+    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    layout->addWidget(spin);
+    layout->addWidget(buttons);
+
+    connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+    if (dialog.exec() != QDialog::Accepted) return;
+
+    worker->dfs_reset();
+    worker->dfs_prepare(spin->value() - 1);
+}
+
+void MainWindow::on_next_clicked() {
+    worker->dfs_step_next();
+}
+
+void MainWindow::on_reset_clicked() {
+    worker->dfs_reset();
 }

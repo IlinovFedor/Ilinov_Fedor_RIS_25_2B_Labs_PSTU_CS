@@ -9,6 +9,9 @@
 #include <QGraphicsScene>
 #include <QCheckBox>
 #include <QPushButton>
+#include <QDialog>
+#include <QSpinBox>
+#include <QDialogButtonBox>
 #include "GraphWorker.h"
 #include "MatrixEditor.h"
 
@@ -46,6 +49,9 @@ private slots:
     void on_zoom_out_clicked();
     void on_generate_tree_clicked();
     void on_generate_random_clicked();
+    void on_run_dfs_clicked();
+    void on_next_clicked();
+    void on_reset_clicked();
 };
 
 

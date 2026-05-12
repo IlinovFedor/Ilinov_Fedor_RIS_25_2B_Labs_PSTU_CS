@@ -21,7 +21,7 @@ void UiVertex::paint(QPainter *painter,
     painter->setPen(QPen(Qt::black, 3));
     if (is_used)
         painter->setPen(QPen(Qt::blue, 5));
-    else if (is_active)
+    if (is_active)
         painter->setPen(QPen(Qt::red, 5));
 
     painter->setBrush(Qt::white);
