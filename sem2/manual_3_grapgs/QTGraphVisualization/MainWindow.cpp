@@ -14,7 +14,7 @@ MainWindow::MainWindow() : QWidget(nullptr){
     worker = new GraphWorker(this, graph);
     worker->draw_graph();
 
-    graph_params_layout = new QHBoxLayout(this);
+    graph_params_layout = new QHBoxLayout(nullptr);
     edit_matrix = new QPushButton("Edit matrix", this);
     generate_random = new QPushButton("Generate random graph", this);
     generate_tree = new QPushButton("Generate tree", this);
@@ -41,7 +41,7 @@ MainWindow::MainWindow() : QWidget(nullptr){
     graph_params_layout = new QHBoxLayout;
     vertical_layout->addLayout(graph_params_layout);
 
-    run_layout = new QHBoxLayout(this);
+    run_layout = new QHBoxLayout(nullptr);
     reset = new QPushButton("Reset", this);
     next = new QPushButton("Next step", this);
     run_layout->addWidget(reset);
@@ -63,6 +63,8 @@ MainWindow::MainWindow() : QWidget(nullptr){
     connect(zoom_out, &QPushButton::clicked, this, &MainWindow::on_zoom_out_clicked);
 
     connect(run_dfs, &QPushButton::clicked, this, &MainWindow::on_run_dfs_clicked);
+    connect(run_bfs, &QPushButton::clicked, this, &MainWindow::on_run_bfs_clicked);
+    connect(run_dijkstra, &QPushButton::clicked, this, &MainWindow::on_run_dijkstra_clicked);
     connect(next, &QPushButton::clicked, this, &MainWindow::on_next_clicked);
     connect(reset, &QPushButton::clicked, this, &MainWindow::on_reset_clicked);
 }
@@ -117,6 +119,57 @@ void MainWindow::on_run_dfs_clicked() {
     worker->dfs_reset();
     worker->dfs_prepare(spin->value() - 1);
 }
+
+void MainWindow::on_run_bfs_clicked() {
+    int n = worker->graph.size();
+    if (n == 0) return;
+
+    QDialog dialog(this);
+    dialog.setWindowTitle("BFS start vertex");
+
+    auto *layout = new QVBoxLayout(&dialog);
+    auto *spin = new QSpinBox(&dialog);
+    spin->setRange(1, n);
+    spin->setValue(1);
+
+    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    layout->addWidget(spin);
+    layout->addWidget(buttons);
+
+    connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+    if (dialog.exec() != QDialog::Accepted) return;
+
+    worker->dfs_reset();
+    worker->bfs_prepare(spin->value() - 1);
+}
+
+void MainWindow::on_run_dijkstra_clicked() {
+    int n = worker->graph.size();
+    if (n == 0) return;
+
+    QDialog dialog(this);
+    dialog.setWindowTitle("Dijkstra start vertex");
+
+    auto *layout = new QVBoxLayout(&dialog);
+    auto *spin = new QSpinBox(&dialog);
+    spin->setRange(1, n);
+    spin->setValue(1);
+
+    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    layout->addWidget(spin);
+    layout->addWidget(buttons);
+
+    connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+    if (dialog.exec() != QDialog::Accepted) return;
+
+    worker->dfs_reset();
+    worker->dijkstra_prepare(spin->value() - 1);
+}
+
 
 void MainWindow::on_next_clicked() {
     worker->dfs_step_next();

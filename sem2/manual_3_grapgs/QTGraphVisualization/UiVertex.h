@@ -9,16 +9,16 @@
 #include <QPainter>
 
 class UiVertex : public QGraphicsItem {
-    int vertex_label = 0;
+    std::string vertex_label = "0";
     qreal vertex_radius = 30;
 
     bool is_active = false;
     bool is_used = false;
 public:
-    UiVertex(int value = 0);
+    UiVertex(std::string value = "0");
 
     void set_pos(qreal x, qreal y);
-    void set_value(int value);
+    void set_value(std::string value);
     const qreal get_radius();
 
     void activate();

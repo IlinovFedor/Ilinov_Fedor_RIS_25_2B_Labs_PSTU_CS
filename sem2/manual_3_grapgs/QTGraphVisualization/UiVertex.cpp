@@ -4,7 +4,7 @@
 
 #include "UiVertex.h"
 
-UiVertex::UiVertex(int value) {
+UiVertex::UiVertex(std::string value) {
     vertex_label = value;
 }
 
@@ -30,14 +30,14 @@ void UiVertex::paint(QPainter *painter,
     painter->setPen(Qt::black);
     painter->drawText(boundingRect(),
                       Qt::AlignCenter,
-                      QString::number(vertex_label));
+                      QString::fromStdString(vertex_label));
 }
 
 void UiVertex::set_pos(qreal x, qreal y) {
     setPos(x, y);
 }
 
-void UiVertex::set_value(int value) {
+void UiVertex::set_value(std::string value) {
     vertex_label = value;
     update();
 }

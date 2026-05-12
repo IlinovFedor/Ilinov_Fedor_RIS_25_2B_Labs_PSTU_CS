@@ -29,6 +29,17 @@ void assign_tree_positions(int v,
 
     x_pos[v] = (x_pos[children[v].front()] + x_pos[children[v].back()]) / 2.0;
 }
+
+}
+
+void GraphWorker::clear_active_edges() {
+    for (auto *edge : active_edges) {
+        if (!edge) continue;
+        edge->dis_activate_i_j();
+        edge->dis_activate_j_i();
+        edge->update();
+    }
+    active_edges.clear();
 }
 
 void GraphWorker::draw_tree() {
@@ -100,7 +111,7 @@ void GraphWorker::draw_tree() {
 
     // --- 4. Создаём вершины ---
     for (int i = 0; i < n; i++) {
-        auto *v = new UiVertex(i + 1);
+        auto *v = new UiVertex(std::to_string(i + 1));
         v->set_pos(x_pos[i] + shift_x, y_pos[i] + shift_y);
         vertices.push_back(v);
     }
@@ -146,7 +157,7 @@ void GraphWorker::draw_not_tree() {
         double angle = step * i;
         double x = center.x() + radius * std::cos(angle);
         double y = center.y() + radius * std::sin(angle);
-        auto *v = new UiVertex(i + 1);
+        auto *v = new UiVertex(std::to_string(i + 1));
         v->set_pos(x, y);
         vertices.push_back(v);
     }
@@ -219,6 +230,8 @@ void GraphWorker::draw_graph() {
 void GraphWorker::dfs_prepare(int start_index) {
     steps.clear();
     step_index = 0;
+    last_dist.clear();
+    active_edges.clear();
 
     int n = graph.size();
     if (n == 0) return;
@@ -291,6 +304,71 @@ void GraphWorker::dfs_step_next() {
     Step step = steps[step_index];
     step_index++;
 
+    if (step.type == Step::DijkstraSelect) {
+        for (auto *vertex : vertices) {
+            vertex->dis_activate();
+            vertex->update();
+        }
+
+        clear_active_edges();
+
+        if (step.cur_v >= 0 && step.cur_v < static_cast<int>(vertices.size())) {
+            vertices[step.cur_v]->set_used();
+            vertices[step.cur_v]->activate();
+            std::string label = std::to_string(step.cur_v + 1) + "\n" +
+                                (step.dist >= 1000000000 ? "INF" : std::to_string(step.dist));
+            vertices[step.cur_v]->set_value(label);
+            vertices[step.cur_v]->update();
+        }
+        return;
+    }
+
+    if (step.type == Step::DijkstraInspect) {
+        clear_active_edges();
+
+        if (step.from >= 0 && step.from < static_cast<int>(vertices.size())) {
+            for (auto *vertex : vertices) {
+                vertex->dis_activate();
+                vertex->update();
+            }
+            vertices[step.from]->activate();
+            vertices[step.from]->update();
+        }
+
+        if (step.from >= 0 && step.to >= 0
+            && step.from < static_cast<int>(edge_matrix.size())
+            && step.to < static_cast<int>(edge_matrix.size())) {
+            UiEdge *edge = edge_matrix[step.from][step.to];
+            if (edge) {
+                if (step.from < step.to)
+                    edge->activate_i_j();
+                else if (step.from > step.to)
+                    edge->activate_j_i();
+                edge->update();
+                active_edges.push_back(edge);
+            }
+        }
+        return;
+    }
+
+    if (step.type == Step::DijkstraRelax) {
+        clear_active_edges();
+
+        if (step.to >= 0 && step.to < static_cast<int>(vertices.size())) {
+            for (auto *vertex : vertices) {
+                vertex->dis_activate();
+                vertex->update();
+            }
+            vertices[step.to]->activate();
+            std::string label = std::to_string(step.to + 1) + "\n" +
+                                (step.dist >= 1000000000 ? "INF" : std::to_string(step.dist));
+            vertices[step.to]->set_value(label);
+            vertices[step.to]->update();
+        }
+        return;
+    }
+
+
     if (step.type == Step::EdgeActivate) {
         for (auto *vertex : vertices) {
             vertex->dis_activate();
@@ -337,6 +415,15 @@ void GraphWorker::dfs_step_next() {
         if (step.cur_v >= 0 && step.cur_v < static_cast<int>(vertices.size())) {
             vertices[step.cur_v]->set_used();
             vertices[step.cur_v]->activate();
+            int value = step.cur_v + 1;
+            if (step.cur_v >= 0 && step.cur_v < static_cast<int>(last_dist.size())) {
+                if (last_dist[step.cur_v] >= 1000000000)
+                    vertices[step.cur_v]->set_value(std::to_string(value) + "\nINF");
+                else
+                    vertices[step.cur_v]->set_value(std::to_string(value) + "\n" + std::to_string(last_dist[step.cur_v]));
+            } else {
+                vertices[step.cur_v]->set_value(std::to_string(value));
+            }
             vertices[step.cur_v]->update();
         }
     }
@@ -345,16 +432,127 @@ void GraphWorker::dfs_step_next() {
 void GraphWorker::dfs_reset() {
     steps.clear();
     step_index = 0;
+    clear_active_edges();
 
-    for (auto *vertex : vertices) {
-        vertex->dis_activate();
-        vertex->set_unused();
-        vertex->update();
+    for (int i = 0; i < static_cast<int>(vertices.size()); i++) {
+        vertices[i]->dis_activate();
+        vertices[i]->set_unused();
+        vertices[i]->set_value(std::to_string(i + 1));
+        vertices[i]->update();
     }
 
     for (auto *edge : edges) {
         edge->dis_activate_i_j();
         edge->dis_activate_j_i();
         edge->update();
+    }
+}
+
+
+void GraphWorker::bfs_prepare(int start_index) {
+    steps.clear();
+    step_index = 0;
+    last_dist.clear();
+    active_edges.clear();
+
+    int n = graph.size();
+    if (n == 0) return;
+    if (start_index < 0 || start_index >= n) return;
+
+    std::vector<bool> visited(n, false);
+    std::queue<int> q;
+
+    visited[start_index] = true;
+    q.push(start_index);
+
+    Step root_step;
+    root_step.type = Step::VertexAdvance;
+    root_step.cur_v = start_index;
+    steps.push_back(root_step);
+
+    while (!q.empty()) {
+        int v = q.front();
+        q.pop();
+
+        for (int j = 0; j < n; j++) {
+            if (graph.has_edge(v, j) && !visited[j]) {
+                visited[j] = true;
+                q.push(j);
+
+                Step edge_step;
+                edge_step.type = Step::EdgeActivate;
+                edge_step.from = v;
+                edge_step.to = j;
+                steps.push_back(edge_step);
+
+                Step vertex_step;
+                vertex_step.type = Step::VertexAdvance;
+                vertex_step.prev_v = v;
+                vertex_step.cur_v = j;
+                vertex_step.from = v;
+                vertex_step.to = j;
+                steps.push_back(vertex_step);
+            }
+        }
+    }
+}
+
+void GraphWorker::dijkstra_prepare(int start_index) {
+    steps.clear();
+    step_index = 0;
+    last_dist.clear();
+    active_edges.clear();
+
+    int n = graph.size();
+    if (n == 0) return;
+    if (start_index < 0 || start_index >= n) return;
+
+    const int INF = 1000000000;
+    std::vector<int> dist(n, INF);
+    last_dist = dist;
+    std::vector<bool> used(n, false);
+
+    dist[start_index] = 0;
+
+    for (int iter = 0; iter < n; iter++) {
+        int v = -1;
+        for (int i = 0; i < n; i++) {
+            if (!used[i] && (v == -1 || dist[i] < dist[v]))
+                v = i;
+        }
+        if (v == -1 || dist[v] == INF) break;
+
+        used[v] = true;
+
+        Step select_step;
+        select_step.type = Step::DijkstraSelect;
+        select_step.cur_v = v;
+        select_step.dist = dist[v];
+        steps.push_back(select_step);
+
+        for (int to = 0; to < n; to++) {
+            if (!graph.has_edge(v, to)) continue;
+            int *weight_ptr = graph.get_weight(v, to);
+            if (!weight_ptr) continue;
+            int weight = *weight_ptr;
+
+            Step inspect_step;
+            inspect_step.type = Step::DijkstraInspect;
+            inspect_step.from = v;
+            inspect_step.to = to;
+            steps.push_back(inspect_step);
+
+            if (dist[v] + weight < dist[to]) {
+                dist[to] = dist[v] + weight;
+                last_dist = dist;
+
+                Step relax_step;
+                relax_step.type = Step::DijkstraRelax;
+                relax_step.from = v;
+                relax_step.to = to;
+                relax_step.dist = dist[to];
+                steps.push_back(relax_step);
+            }
+        }
     }
 }

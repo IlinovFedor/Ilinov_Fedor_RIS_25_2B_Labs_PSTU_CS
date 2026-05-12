@@ -15,12 +15,16 @@ class GraphWorker : public QWidget {
     struct Step {
         enum Type {
             EdgeActivate,
-            VertexAdvance
+            VertexAdvance,
+            DijkstraSelect,
+            DijkstraInspect,
+            DijkstraRelax
         } type;
         int prev_v = -1;
         int cur_v = -1;
         int from = -1;
         int to = -1;
+        int dist = -1;
     };
 
     std::vector<UiVertex*> vertices;
@@ -28,12 +32,15 @@ class GraphWorker : public QWidget {
     std::vector<std::vector<UiEdge*> > edge_matrix;
     std::vector<Step> steps;
     size_t step_index = 0;
+    std::vector<int> last_dist;
+    std::vector<UiEdge*> active_edges;
 
     QGraphicsScene *scene;
     QGraphicsView *view;
 
     void draw_tree();
     void draw_not_tree();
+    void clear_active_edges();
 public:
     GraphWorker(QWidget* parent, const Graph& new_graph);
     ~GraphWorker();
@@ -45,6 +52,8 @@ public:
     void dfs_prepare(int start_index);
     void dfs_step_next();
     void dfs_reset();
+    void bfs_prepare(int start_index);
+    void dijkstra_prepare(int start_index);
 };
 
 
