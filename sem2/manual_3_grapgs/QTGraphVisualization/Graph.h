@@ -17,7 +17,7 @@ public:
     ~Graph();
     Graph &operator=(const Graph &other);
     void clear_matrix();
-    const std::vector<std::vector<int *> > &get_matrix();
+    const std::vector<std::vector<int *> > &get_matrix() const;
     void set_matrix(const std::vector<std::vector<int *> > &new_matrix);
 
     bool is_visual_tree();

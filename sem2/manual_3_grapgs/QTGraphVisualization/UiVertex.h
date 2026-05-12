@@ -15,7 +15,7 @@ class UiVertex : public QGraphicsItem {
     bool is_active = false;
     bool is_used = false;
 public:
-    explicit UiVertex(int value = 0);
+    UiVertex(int value = 0);
 
     void set_pos(qreal x, qreal y);
     void set_value(int value);

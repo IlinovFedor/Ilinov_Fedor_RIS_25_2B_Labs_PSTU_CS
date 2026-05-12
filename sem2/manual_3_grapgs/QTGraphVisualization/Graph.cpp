@@ -2,7 +2,6 @@
 
 #include <random>
 
-// Один раз объяви генератор (можно как член класса или static внутри функции)
 static std::mt19937 rng(std::random_device{}());
 
 Graph::Graph(const Graph &other) {
@@ -31,7 +30,7 @@ Graph &Graph::operator=(const Graph &other) {
     return *this;
 }
 
-const std::vector<std::vector<int *> > &Graph::get_matrix() {
+const std::vector<std::vector<int *> > &Graph::get_matrix() const {
     return matrix;
 }
 

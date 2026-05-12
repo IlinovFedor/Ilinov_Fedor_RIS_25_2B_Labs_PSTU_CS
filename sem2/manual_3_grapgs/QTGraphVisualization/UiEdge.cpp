@@ -25,6 +25,9 @@ QRectF UiEdge::boundingRect() const {
 void UiEdge::paint(QPainter *painter,
                    const QStyleOptionGraphicsItem *option,
                    QWidget *widget) {
+    if (i_vertex->pos() == j_vertex->pos())
+        return;
+
     painter->setPen(is_active_i_j || is_active_j_i ? QPen(Qt::red, 5) : QPen(Qt::black, 3));
     painter->drawLine(i_vertex->pos(), j_vertex->pos());
 
@@ -80,8 +83,12 @@ QPolygonF UiEdge::build_arrow(const QPointF &from, const QPointF &to,
     QPointF tip   = to - unit * offset;
     QPointF base1 = tip - unit * height + perp * (size / 2.0);
     QPointF base2 = tip - unit * height - perp * (size / 2.0);
-
-    return QPolygonF() << tip << base1 << base2;
+    QPolygonF pol;
+    pol.resize(3);
+    pol[0] = tip;
+    pol[1] = base1;
+    pol[2] = base2;
+    return pol;
 }
 
 void UiEdge::set_i_j_weight(int *weight) {

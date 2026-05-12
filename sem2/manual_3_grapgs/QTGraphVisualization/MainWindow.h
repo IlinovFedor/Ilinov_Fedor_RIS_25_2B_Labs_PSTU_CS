@@ -10,12 +10,15 @@
 #include <QCheckBox>
 #include <QPushButton>
 #include "GraphWorker.h"
+#include "MatrixEditor.h"
 
 class MainWindow : public QWidget {
     Q_OBJECT
     QVBoxLayout *vertical_layout;
     QHBoxLayout *algorithms_layout;
     QHBoxLayout *graph_params_layout;
+    QHBoxLayout *view_params_layout;
+    QHBoxLayout *run_layout;
 
     QPushButton *run_bfs;
     QPushButton *run_dfs;
@@ -23,7 +26,12 @@ class MainWindow : public QWidget {
     QPushButton *run_floyd;
 
     QPushButton *edit_matrix;
+    QPushButton *generate_tree;
+    QPushButton *generate_random;
+
     QPushButton *reset;
+    QPushButton *next;
+
     QPushButton *zoom_in;
     QPushButton *zoom_out;
 
@@ -31,6 +39,13 @@ class MainWindow : public QWidget {
     GraphWorker* worker;
 public:
     MainWindow();
+
+private slots:
+    void on_edit_matrix_clicked();
+    void on_zoom_in_clicked();
+    void on_zoom_out_clicked();
+    void on_generate_tree_clicked();
+    void on_generate_random_clicked();
 };
 
 

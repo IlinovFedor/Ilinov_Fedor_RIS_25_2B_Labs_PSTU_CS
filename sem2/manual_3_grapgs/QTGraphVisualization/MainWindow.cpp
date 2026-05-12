@@ -10,12 +10,21 @@ MainWindow::MainWindow() : QWidget(nullptr){
     vertical_layout = new QVBoxLayout(this);
 
     Graph graph;
-    graph.generateTree(15);
+    graph.generateRandom(5);
     worker = new GraphWorker(this, graph);
     worker->draw_graph();
 
-    vertical_layout->addWidget(worker);
+    graph_params_layout = new QHBoxLayout(this);
+    edit_matrix = new QPushButton("Edit matrix", this);
+    generate_random = new QPushButton("Generate random graph", this);
+    generate_tree = new QPushButton("Generate tree", this);
 
+    graph_params_layout->addWidget(edit_matrix);
+    graph_params_layout->addWidget(generate_random);
+    graph_params_layout->addWidget(generate_tree);
+    vertical_layout->addLayout(graph_params_layout);
+
+    vertical_layout->addWidget(worker);
     algorithms_layout = new QHBoxLayout;
     vertical_layout->addLayout(algorithms_layout);
 
@@ -32,14 +41,50 @@ MainWindow::MainWindow() : QWidget(nullptr){
     graph_params_layout = new QHBoxLayout;
     vertical_layout->addLayout(graph_params_layout);
 
-    edit_matrix = new QPushButton("Edit matrix", this);
+    run_layout = new QHBoxLayout(this);
     reset = new QPushButton("Reset", this);
+    next = new QPushButton("Next step", this);
+    run_layout->addWidget(reset);
+    run_layout->addWidget(next);
+
+    vertical_layout->addLayout(run_layout);
+
     zoom_in = new QPushButton("Zoom in", this);
     zoom_out = new QPushButton("Zoom out", this);
 
-
-    graph_params_layout->addWidget(edit_matrix);
-    graph_params_layout->addWidget(reset);
     graph_params_layout->addWidget(zoom_in);
     graph_params_layout->addWidget(zoom_out);
+
+    connect(edit_matrix, &QPushButton::clicked, this, &MainWindow::on_edit_matrix_clicked);
+    connect(generate_random, &QPushButton::clicked, this, &MainWindow::on_generate_random_clicked);
+    connect(generate_tree, &QPushButton::clicked, this, &MainWindow::on_generate_tree_clicked);
+
+    connect(zoom_in, &QPushButton::clicked, this, &MainWindow::on_zoom_in_clicked);
+    connect(zoom_out, &QPushButton::clicked, this, &MainWindow::on_zoom_out_clicked);
+}
+
+void MainWindow::on_edit_matrix_clicked() {
+    MatrixEditor editor(worker->graph, this);
+    if (editor.exec() == QDialog::Accepted) {
+        worker->graph.set_matrix(editor.build_matrix());
+        worker->draw_graph();
+    }
+}
+
+void MainWindow::on_zoom_in_clicked() {
+    worker->zoom_in();
+}
+
+void MainWindow::on_zoom_out_clicked() {
+    worker->zoom_out();
+}
+
+void MainWindow::on_generate_tree_clicked() {
+    worker->graph.generateTree(6, 10);
+    worker->draw_graph();
+}
+
+void MainWindow::on_generate_random_clicked() {
+    worker->graph.generateRandom(5, 10, 0.3);
+    worker->draw_graph();
 }

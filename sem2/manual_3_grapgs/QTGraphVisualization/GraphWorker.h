@@ -19,12 +19,15 @@ class GraphWorker : public QWidget {
     QGraphicsView *view;
 
     void draw_tree();
+    void draw_not_tree();
 public:
     GraphWorker(QWidget* parent, const Graph& new_graph);
     ~GraphWorker();
 
     Graph graph;
     void draw_graph();
+    void zoom_in();
+    void zoom_out();
 };
 
 
