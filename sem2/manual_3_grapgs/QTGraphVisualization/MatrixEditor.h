@@ -1,0 +1,13 @@
+//
+// Created by localuser on 5/13/26.
+//
+
+#ifndef QTGRAPHVISUALIZATION_MATRIXEDITOR_H
+#define QTGRAPHVISUALIZATION_MATRIXEDITOR_H
+
+
+class MatrixEditor {
+};
+
+
+#endif //QTGRAPHVISUALIZATION_MATRIXEDITOR_H
