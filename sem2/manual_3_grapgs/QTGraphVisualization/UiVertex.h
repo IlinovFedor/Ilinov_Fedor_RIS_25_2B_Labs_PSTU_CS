@@ -24,6 +24,7 @@ public:
     void activate();
     void dis_activate();
     void set_used();
+    void set_unused();
 
     QRectF boundingRect() const override;
 

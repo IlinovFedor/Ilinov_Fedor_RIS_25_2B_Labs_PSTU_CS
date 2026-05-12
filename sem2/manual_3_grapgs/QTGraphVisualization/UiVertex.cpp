@@ -57,3 +57,7 @@ void UiVertex::dis_activate() {
 void UiVertex::set_used() {
     is_used = true;
 }
+
+void UiVertex::set_unused() {
+    is_used = false;
+}
