@@ -298,7 +298,7 @@ void GraphWorker::dfs_prepare(int start_index) {
     }
 }
 
-void GraphWorker::dfs_step_next() {
+void GraphWorker::step_next() {
     if (step_index >= steps.size()) return;
 
     Step step = steps[step_index];
@@ -429,7 +429,7 @@ void GraphWorker::dfs_step_next() {
     }
 }
 
-void GraphWorker::dfs_reset() {
+void GraphWorker::reset() {
     steps.clear();
     step_index = 0;
     clear_active_edges();

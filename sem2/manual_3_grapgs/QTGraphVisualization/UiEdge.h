@@ -5,9 +5,7 @@
 #ifndef QTGRAPHVISUALIZATION_UIEDGE_H
 #define QTGRAPHVISUALIZATION_UIEDGE_H
 #include <QGraphicsItem>
-
-
-class UiVertex;
+#include "UiVertex.h"
 
 class UiEdge : public QGraphicsItem {
     UiVertex *i_vertex;
@@ -16,8 +14,7 @@ class UiEdge : public QGraphicsItem {
     int* j_i_weight = nullptr;
     bool is_active_i_j = false;
     bool is_active_j_i = false;
-    QPolygonF build_arrow(const QPointF &from, const QPointF &to,
-                                  double size, double offset);
+    QPolygonF build_arrow(const QPointF &from, const QPointF &to, double size, double offset);
 
 
 public:

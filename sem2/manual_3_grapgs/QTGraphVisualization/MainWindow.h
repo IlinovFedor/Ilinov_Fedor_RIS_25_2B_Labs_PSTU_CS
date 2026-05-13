@@ -38,7 +38,6 @@ class MainWindow : public QWidget {
     QPushButton *zoom_in;
     QPushButton *zoom_out;
 
-
     GraphWorker* worker;
 public:
     MainWindow();

@@ -4,6 +4,7 @@
 
 #ifndef QTGRAPHVISUALIZATION_GRAPHWORKER_H
 #define QTGRAPHVISUALIZATION_GRAPHWORKER_H
+#include <QGraphicsView>
 #include <QWidget>
 #include <vector>
 #include "UiVertex.h"
@@ -50,8 +51,8 @@ public:
     void zoom_in();
     void zoom_out();
     void dfs_prepare(int start_index);
-    void dfs_step_next();
-    void dfs_reset();
+    void step_next();
+    void reset();
     void bfs_prepare(int start_index);
     void dijkstra_prepare(int start_index);
 };

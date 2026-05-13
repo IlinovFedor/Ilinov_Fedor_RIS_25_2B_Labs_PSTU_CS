@@ -10,7 +10,6 @@ MainWindow::MainWindow() : QWidget(nullptr){
     vertical_layout = new QVBoxLayout(this);
 
     Graph graph;
-    graph.generateRandom(5);
     worker = new GraphWorker(this, graph);
     worker->draw_graph();
 
@@ -86,12 +85,46 @@ void MainWindow::on_zoom_out_clicked() {
 }
 
 void MainWindow::on_generate_tree_clicked() {
-    worker->graph.generateTree(6, 10);
+    QDialog dialog(this);
+    dialog.setWindowTitle("Vertices amount");
+
+    auto *layout = new QVBoxLayout(&dialog);
+    auto *spin = new QSpinBox(&dialog);
+    spin->setRange(1, 50);
+    spin->setValue(1);
+
+    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    layout->addWidget(spin);
+    layout->addWidget(buttons);
+
+    connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+    if (dialog.exec() != QDialog::Accepted) return;
+
+    worker->graph.generateTree(spin->value(), 10);
     worker->draw_graph();
 }
 
 void MainWindow::on_generate_random_clicked() {
-    worker->graph.generateRandom(5, 10, 0.3);
+    QDialog dialog(this);
+    dialog.setWindowTitle("Vertices amount");
+
+    auto *layout = new QVBoxLayout(&dialog);
+    auto *spin = new QSpinBox(&dialog);
+    spin->setRange(1, 50);
+    spin->setValue(1);
+
+    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    layout->addWidget(spin);
+    layout->addWidget(buttons);
+
+    connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+    if (dialog.exec() != QDialog::Accepted) return;
+
+    worker->graph.generateRandom(spin->value(), 10, 0.3);
     worker->draw_graph();
 }
 
@@ -116,7 +149,7 @@ void MainWindow::on_run_dfs_clicked() {
 
     if (dialog.exec() != QDialog::Accepted) return;
 
-    worker->dfs_reset();
+    worker->reset();
     worker->dfs_prepare(spin->value() - 1);
 }
 
@@ -141,7 +174,7 @@ void MainWindow::on_run_bfs_clicked() {
 
     if (dialog.exec() != QDialog::Accepted) return;
 
-    worker->dfs_reset();
+    worker->reset();
     worker->bfs_prepare(spin->value() - 1);
 }
 
@@ -166,15 +199,15 @@ void MainWindow::on_run_dijkstra_clicked() {
 
     if (dialog.exec() != QDialog::Accepted) return;
 
-    worker->dfs_reset();
+    worker->reset();
     worker->dijkstra_prepare(spin->value() - 1);
 }
 
 
 void MainWindow::on_next_clicked() {
-    worker->dfs_step_next();
+    worker->step_next();
 }
 
 void MainWindow::on_reset_clicked() {
-    worker->dfs_reset();
+    worker->reset();
 }
