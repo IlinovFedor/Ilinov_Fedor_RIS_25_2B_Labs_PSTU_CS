@@ -5,6 +5,8 @@
 #ifndef QTGRAPHVISUALIZATION_GRAPHWORKER_H
 #define QTGRAPHVISUALIZATION_GRAPHWORKER_H
 #include <QGraphicsView>
+#include <QTableWidget>
+#include <QLabel>
 #include <QWidget>
 #include <vector>
 #include "UiVertex.h"
@@ -13,35 +15,23 @@
 
 class GraphWorker : public QWidget {
     Q_OBJECT
-    struct Step {
-        enum Type {
-            EdgeActivate,
-            VertexAdvance,
-            DijkstraSelect,
-            DijkstraInspect,
-            DijkstraRelax
-        } type;
-        int prev_v = -1;
-        int cur_v = -1;
-        int from = -1;
-        int to = -1;
-        int dist = -1;
-    };
-
     std::vector<UiVertex*> vertices;
-    std::vector<UiEdge*> edges;
     std::vector<std::vector<UiEdge*> > edge_matrix;
-    std::vector<Step> steps;
-    size_t step_index = 0;
+    std::vector<std::function<void()>> steps;
+    int step = 0;
     std::vector<int> last_dist;
     std::vector<UiEdge*> active_edges;
 
     QGraphicsScene *scene;
     QGraphicsView *view;
 
+    QTableWidget* table;
+    QLabel* table_label;
+
     void draw_tree();
     void draw_not_tree();
     void clear_active_edges();
+    void set_cell(int i, int j, const QString& text, const QColor& color);
 public:
     GraphWorker(QWidget* parent, const Graph& new_graph);
     ~GraphWorker();
@@ -55,6 +45,8 @@ public:
     void reset();
     void bfs_prepare(int start_index);
     void dijkstra_prepare(int start_index);
+
+    void floyd_prepare();
 };
 
 

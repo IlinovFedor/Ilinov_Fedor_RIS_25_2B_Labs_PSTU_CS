@@ -33,7 +33,8 @@ void UiEdge::paint(QPainter *painter,
 
 
     if (i_j_weight != nullptr) {
-        QPolygonF arrow = build_arrow(i_vertex->pos(), j_vertex->pos(), i_vertex->get_radius() * 2, i_vertex->get_radius());
+        QPolygonF arrow = build_arrow(i_vertex->pos(), j_vertex->pos(), i_vertex->get_radius() * 2,
+                                      i_vertex->get_radius());
 
         painter->setPen(is_active_i_j ? QPen(Qt::red, 5) : QPen(Qt::black, 3));
         painter->setBrush(QBrush(Qt::white));
@@ -41,17 +42,23 @@ void UiEdge::paint(QPainter *painter,
 
         QPointF centroid = (arrow[0] + arrow[1] + arrow[2]) / 3.0;
         painter->setPen(QPen(Qt::black));
+        QString text = QString::number(*this->i_j_weight);
+        if (*i_j_weight == INT_MAX)
+            text = "+inf";
+        if (*i_j_weight == INT_MIN)
+            text = "-inf";
         painter->drawText(
-            (int)(centroid.x() - 20),
-            (int)(centroid.y() - 10),
+            (int) (centroid.x() - 20),
+            (int) (centroid.y() - 10),
             40, 20,
             Qt::AlignCenter,
-            QString::number(*this->i_j_weight)
+            text
         );
     }
 
     if (j_i_weight != nullptr) {
-        QPolygonF arrow = build_arrow(j_vertex->pos(), i_vertex->pos(), i_vertex->get_radius() * 2, i_vertex->get_radius());
+        QPolygonF arrow = build_arrow(j_vertex->pos(), i_vertex->pos(), i_vertex->get_radius() * 2,
+                                      i_vertex->get_radius());
 
         painter->setPen(is_active_j_i ? QPen(Qt::red, 5) : QPen(Qt::black, 3));
         painter->setBrush(QBrush(Qt::white));
@@ -59,12 +66,17 @@ void UiEdge::paint(QPainter *painter,
 
         QPointF centroid = (arrow[0] + arrow[1] + arrow[2]) / 3.0;
         painter->setPen(QPen(Qt::black));
+        QString text = QString::number(*this->j_i_weight);
+        if (*j_i_weight == INT_MAX)
+            text = "+inf";
+        if (*j_i_weight == INT_MIN)
+            text = "-inf";
         painter->drawText(
-            (int)(centroid.x() - 20),
-            (int)(centroid.y() - 10),
+            (int) (centroid.x() - 20),
+            (int) (centroid.y() - 10),
             40, 20,
             Qt::AlignCenter,
-            QString::number(*this->j_i_weight)
+            text
         );
     }
 }
@@ -80,7 +92,7 @@ QPolygonF UiEdge::build_arrow(const QPointF &from, const QPointF &to,
 
     double height = size * std::sqrt(3.0) / 2.0;
 
-    QPointF tip   = to - unit * offset;
+    QPointF tip = to - unit * offset;
     QPointF base1 = tip - unit * height + perp * (size / 2.0);
     QPointF base2 = tip - unit * height - perp * (size / 2.0);
     QPolygonF pol;
@@ -93,25 +105,34 @@ QPolygonF UiEdge::build_arrow(const QPointF &from, const QPointF &to,
 
 void UiEdge::set_i_j_weight(int *weight) {
     i_j_weight = weight;
+    update();
 }
 
 void UiEdge::set_j_i_weight(int *weight) {
     j_i_weight = weight;
+    update();
 }
 
 void UiEdge::activate_i_j() {
     is_active_i_j = true;
+    update();
 }
 
 void UiEdge::dis_activate_i_j() {
     is_active_i_j = false;
+    update();
 }
-
 
 void UiEdge::activate_j_i() {
     is_active_j_i = true;
+    update();
 }
 
 void UiEdge::dis_activate_j_i() {
     is_active_j_i = false;
+    update();
 }
+
+int *UiEdge::get_i_j_weight() { return i_j_weight; }
+
+int *UiEdge::get_j_i_weight() { return j_i_weight; }

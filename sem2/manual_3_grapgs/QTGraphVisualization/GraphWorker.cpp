@@ -9,31 +9,30 @@
 #include <cmath>
 
 namespace {
-void assign_tree_positions(int v,
-                           int depth,
-                           const std::vector<std::vector<int> > &children,
-                           std::vector<double> &x_pos,
-                           std::vector<double> &y_pos,
-                           int &leaf_counter,
-                           double h_step,
-                           double v_step) {
-    y_pos[v] = depth * v_step + 60.0;
-    if (children[v].empty()) {
-        x_pos[v] = leaf_counter * h_step + 60.0;
-        leaf_counter++;
-        return;
+    void assign_tree_positions(int v,
+                               int depth,
+                               const std::vector<std::vector<int> > &children,
+                               std::vector<double> &x_pos,
+                               std::vector<double> &y_pos,
+                               int &leaf_counter,
+                               double h_step,
+                               double v_step) {
+        y_pos[v] = depth * v_step + 60.0;
+        if (children[v].empty()) {
+            x_pos[v] = leaf_counter * h_step + 60.0;
+            leaf_counter++;
+            return;
+        }
+
+        for (int c: children[v])
+            assign_tree_positions(c, depth + 1, children, x_pos, y_pos, leaf_counter, h_step, v_step);
+
+        x_pos[v] = (x_pos[children[v].front()] + x_pos[children[v].back()]) / 2.0;
     }
-
-    for (int c : children[v])
-        assign_tree_positions(c, depth + 1, children, x_pos, y_pos, leaf_counter, h_step, v_step);
-
-    x_pos[v] = (x_pos[children[v].front()] + x_pos[children[v].back()]) / 2.0;
-}
-
 }
 
 void GraphWorker::clear_active_edges() {
-    for (auto *edge : active_edges) {
+    for (auto *edge: active_edges) {
         if (!edge) continue;
         edge->dis_activate_i_j();
         edge->dis_activate_j_i();
@@ -45,13 +44,11 @@ void GraphWorker::clear_active_edges() {
 void GraphWorker::draw_tree() {
     scene->clear();
     vertices.clear();
-    edges.clear();
     edge_matrix.clear();
 
     int n = graph.size();
     if (n == 0) return;
 
-    // --- 1. Корень: вершина без входящих рёбер ---
     std::vector<int> in_degree(n, 0);
     for (int i = 0; i < n; i++)
         for (int j = 0; j < n; j++)
@@ -65,26 +62,24 @@ void GraphWorker::draw_tree() {
             break;
         }
 
-    // --- 2. BFS: строим дерево ---
     std::vector<std::vector<int> > children(n);
-    std::vector<bool> visited(n, false);
+    std::vector<bool> used(n, false);
     std::queue<int> q;
     q.push(root);
-    visited[root] = true;
+    used[root] = true;
 
     while (!q.empty()) {
         int cur = q.front();
         q.pop();
         for (int next = 0; next < n; next++) {
-            if (!visited[next] && graph.has_edge(cur, next)) {
-                visited[next] = true;
+            if (!used[next] && graph.has_edge(cur, next)) {
+                used[next] = true;
                 children[cur].push_back(next);
                 q.push(next);
             }
         }
     }
 
-    // --- 3. Расстановка координат ---
     const double H_STEP = 200.0;
     const double V_STEP = 200.0;
 
@@ -109,41 +104,40 @@ void GraphWorker::draw_tree() {
     double shift_x = center.x() - (min_x + max_x) / 2.0;
     double shift_y = center.y() - (min_y + max_y) / 2.0;
 
-    // --- 4. Создаём вершины ---
     for (int i = 0; i < n; i++) {
         auto *v = new UiVertex(std::to_string(i + 1));
         v->set_pos(x_pos[i] + shift_x, y_pos[i] + shift_y);
         vertices.push_back(v);
     }
 
-    edge_matrix.assign(n, std::vector<UiEdge*>(n, nullptr));
+    edge_matrix.assign(n, std::vector<UiEdge *>(n, nullptr));
 
-    // --- 5. Создаём рёбра ---
     for (int i = 0; i < n; i++) {
         for (int j = i + 1; j < n; j++) {
             if (graph.has_edge(i, j) || graph.has_edge(j, i)) {
                 auto *e = new UiEdge(vertices[i], vertices[j]);
-                if (graph.has_edge(i, j))
+                if (graph.has_edge(i, j)) {
                     e->set_i_j_weight(graph.get_weight(i, j));
-                if (graph.has_edge(j, i))
-                    e->set_j_i_weight(graph.get_weight(j, i));
-                edges.push_back(e);
-                if (graph.has_edge(i, j))
                     edge_matrix[i][j] = e;
-                if (graph.has_edge(j, i))
+                }
+                if (graph.has_edge(j, i)) {
+                    e->set_j_i_weight(graph.get_weight(j, i));
                     edge_matrix[j][i] = e;
+                }
             }
         }
     }
 
-    for (auto edge : edges) scene->addItem(edge);
-    for (auto vertex : vertices) scene->addItem(vertex);
+    for (auto v: edge_matrix)
+        for (auto ui_edge: v)
+            if (ui_edge != nullptr)
+                scene->addItem(ui_edge);
+    for (auto vertex: vertices) scene->addItem(vertex);
 }
 
 void GraphWorker::draw_not_tree() {
     scene->clear();
     vertices.clear();
-    edges.clear();
     edge_matrix.clear();
 
     int n = graph.size();
@@ -162,30 +156,38 @@ void GraphWorker::draw_not_tree() {
         vertices.push_back(v);
     }
 
-    edge_matrix.assign(n, std::vector<UiEdge*>(n, nullptr));
+    edge_matrix.assign(n, std::vector<UiEdge *>(n, nullptr));
 
     for (int i = 0; i < n; i++) {
         for (int j = i + 1; j < n; j++) {
             if (graph.has_edge(i, j) || graph.has_edge(j, i)) {
                 auto *e = new UiEdge(vertices[i], vertices[j]);
-                if (graph.has_edge(i, j))
+                if (graph.has_edge(i, j)) {
                     e->set_i_j_weight(graph.get_weight(i, j));
-                if (graph.has_edge(j, i))
-                    e->set_j_i_weight(graph.get_weight(j, i));
-                edges.push_back(e);
-                if (graph.has_edge(i, j))
                     edge_matrix[i][j] = e;
-                if (graph.has_edge(j, i))
+                }
+                if (graph.has_edge(j, i)) {
+                    e->set_j_i_weight(graph.get_weight(j, i));
                     edge_matrix[j][i] = e;
+                }
             }
         }
     }
 
-    for (auto edge : edges) scene->addItem(edge);
-    for (auto vertex : vertices) scene->addItem(vertex);
+    for (auto v: edge_matrix)
+        for (auto ui_edge: v)
+            if (ui_edge != nullptr)
+                scene->addItem(ui_edge);
+    for (auto vertex: vertices) scene->addItem(vertex);
 }
 
 GraphWorker::GraphWorker(QWidget *parent, const Graph &new_graph) : QWidget(parent) {
+    table = new QTableWidget(this);
+    table->hide();
+    table->setMaximumHeight(200);
+    table_label = new QLabel(this);
+    table_label->hide();
+
     scene = new QGraphicsScene(this);
     view = new QGraphicsView(scene, this);
     graph = new_graph;
@@ -196,17 +198,22 @@ GraphWorker::GraphWorker(QWidget *parent, const Graph &new_graph) : QWidget(pare
     view->setInteractive(true);
     view->setDragMode(QGraphicsView::ScrollHandDrag);
 
-    QVBoxLayout* layout = new QVBoxLayout(this);
+    QVBoxLayout *layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->addWidget(view);
+    layout->addWidget(table_label);
+    layout->addWidget(table);
     setLayout(layout);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
 
 GraphWorker::~GraphWorker() {
-    for (auto* v : vertices) delete v;
-    for (auto* e : edges) delete e;
+    for (auto *v: vertices) delete v;
+    for (auto v: edge_matrix)
+        for (auto ui_edge: v)
+            if (ui_edge != nullptr)
+                delete ui_edge;
 }
 
 void GraphWorker::zoom_in() {
@@ -229,330 +236,275 @@ void GraphWorker::draw_graph() {
 
 void GraphWorker::dfs_prepare(int start_index) {
     steps.clear();
-    step_index = 0;
-    last_dist.clear();
-    active_edges.clear();
-
+    step = 0;
     int n = graph.size();
-    if (n == 0) return;
-    if (start_index < 0 || start_index >= n) return;
 
-    std::vector<bool> visited(n, false);
-    std::vector<int> parent(n, -1);
+    std::vector<bool> used(n, false);
+    std::function<void(int, int)> dfs = [&](int node, int prev) {
+        used[node] = true;
 
-    struct Frame {
-        int v;
-        int next;
-    };
+        steps.push_back([this, node, prev]() {
+            vertices[prev]->make_blue();
+            vertices[node]->make_red();
+            auto edge = edge_matrix[prev][node];
+            if (edge) {
+                if (node < prev)
+                    edge->dis_activate_j_i();
+                else if (node > prev)
+                    edge->dis_activate_i_j();
+            }
+        });
 
-    std::vector<Frame> stack;
-    stack.push_back({start_index, 0});
-    visited[start_index] = true;
 
-    Step root_step;
-    root_step.type = Step::VertexAdvance;
-    root_step.cur_v = start_index;
-    steps.push_back(root_step);
+        for (int j = 0; j < n; j++) {
+            if (graph.has_edge(node, j) && !used[j]) {
+                steps.push_back([this, node, j]() {
+                    UiEdge *edge = edge_matrix[node][j];
+                    if (node < j)
+                        edge->activate_i_j();
+                    else
+                        edge->activate_j_i();
+                });
 
-    while (!stack.empty()) {
-        Frame &frame = stack.back();
-        int v = frame.v;
+                dfs(j, node);
 
-        bool moved = false;
-        for (int j = frame.next; j < n; j++) {
-            frame.next = j + 1;
-            if (graph.has_edge(v, j) && !visited[j]) {
-                parent[j] = v;
-                visited[j] = true;
-
-                Step edge_step;
-                edge_step.type = Step::EdgeActivate;
-                edge_step.from = v;
-                edge_step.to = j;
-                steps.push_back(edge_step);
-
-                Step vertex_step;
-                vertex_step.type = Step::VertexAdvance;
-                vertex_step.prev_v = v;
-                vertex_step.cur_v = j;
-                vertex_step.from = v;
-                vertex_step.to = j;
-                steps.push_back(vertex_step);
-
-                stack.push_back({j, 0});
-                moved = true;
-                break;
+                steps.push_back([this, node, j]() {
+                    vertices[node]->make_red();
+                    vertices[j]->make_blue();
+                });
             }
         }
+    };
 
-        if (moved) continue;
-
-        stack.pop_back();
-        if (parent[v] != -1) {
-            Step back_step;
-            back_step.type = Step::VertexAdvance;
-            back_step.prev_v = v;
-            back_step.cur_v = parent[v];
-            steps.push_back(back_step);
-        }
-    }
+    dfs(start_index, start_index);
 }
 
 void GraphWorker::step_next() {
-    if (step_index >= steps.size()) return;
-
-    Step step = steps[step_index];
-    step_index++;
-
-    if (step.type == Step::DijkstraSelect) {
-        for (auto *vertex : vertices) {
-            vertex->dis_activate();
-            vertex->update();
-        }
-
-        clear_active_edges();
-
-        if (step.cur_v >= 0 && step.cur_v < static_cast<int>(vertices.size())) {
-            vertices[step.cur_v]->set_used();
-            vertices[step.cur_v]->activate();
-            std::string label = std::to_string(step.cur_v + 1) + "\n" +
-                                (step.dist >= 1000000000 ? "INF" : std::to_string(step.dist));
-            vertices[step.cur_v]->set_value(label);
-            vertices[step.cur_v]->update();
-        }
-        return;
-    }
-
-    if (step.type == Step::DijkstraInspect) {
-        clear_active_edges();
-
-        if (step.from >= 0 && step.from < static_cast<int>(vertices.size())) {
-            for (auto *vertex : vertices) {
-                vertex->dis_activate();
-                vertex->update();
-            }
-            vertices[step.from]->activate();
-            vertices[step.from]->update();
-        }
-
-        if (step.from >= 0 && step.to >= 0
-            && step.from < static_cast<int>(edge_matrix.size())
-            && step.to < static_cast<int>(edge_matrix.size())) {
-            UiEdge *edge = edge_matrix[step.from][step.to];
-            if (edge) {
-                if (step.from < step.to)
-                    edge->activate_i_j();
-                else if (step.from > step.to)
-                    edge->activate_j_i();
-                edge->update();
-                active_edges.push_back(edge);
-            }
-        }
-        return;
-    }
-
-    if (step.type == Step::DijkstraRelax) {
-        clear_active_edges();
-
-        if (step.to >= 0 && step.to < static_cast<int>(vertices.size())) {
-            for (auto *vertex : vertices) {
-                vertex->dis_activate();
-                vertex->update();
-            }
-            vertices[step.to]->activate();
-            std::string label = std::to_string(step.to + 1) + "\n" +
-                                (step.dist >= 1000000000 ? "INF" : std::to_string(step.dist));
-            vertices[step.to]->set_value(label);
-            vertices[step.to]->update();
-        }
-        return;
-    }
-
-
-    if (step.type == Step::EdgeActivate) {
-        for (auto *vertex : vertices) {
-            vertex->dis_activate();
-            vertex->update();
-        }
-
-        if (step.from >= 0 && step.from < static_cast<int>(vertices.size())) {
-            vertices[step.from]->activate();
-            vertices[step.from]->update();
-        }
-
-        if (step.from >= 0 && step.to >= 0
-            && step.from < static_cast<int>(edge_matrix.size())
-            && step.to < static_cast<int>(edge_matrix.size())) {
-            UiEdge *edge = edge_matrix[step.from][step.to];
-            if (edge) {
-                if (step.from < step.to)
-                    edge->activate_i_j();
-                else if (step.from > step.to)
-                    edge->activate_j_i();
-                edge->update();
-            }
-        }
-        return;
-    }
-
-    if (step.type == Step::VertexAdvance) {
-        for (auto *vertex : vertices) {
-            vertex->dis_activate();
-            vertex->update();
-        }
-
-        if (step.from >= 0 && step.to >= 0
-            && step.from < static_cast<int>(edge_matrix.size())
-            && step.to < static_cast<int>(edge_matrix.size())) {
-            UiEdge *edge = edge_matrix[step.from][step.to];
-            if (edge) {
-                edge->dis_activate_i_j();
-                edge->dis_activate_j_i();
-                edge->update();
-            }
-        }
-
-        if (step.cur_v >= 0 && step.cur_v < static_cast<int>(vertices.size())) {
-            vertices[step.cur_v]->set_used();
-            vertices[step.cur_v]->activate();
-            int value = step.cur_v + 1;
-            if (step.cur_v >= 0 && step.cur_v < static_cast<int>(last_dist.size())) {
-                if (last_dist[step.cur_v] >= 1000000000)
-                    vertices[step.cur_v]->set_value(std::to_string(value) + "\nINF");
-                else
-                    vertices[step.cur_v]->set_value(std::to_string(value) + "\n" + std::to_string(last_dist[step.cur_v]));
-            } else {
-                vertices[step.cur_v]->set_value(std::to_string(value));
-            }
-            vertices[step.cur_v]->update();
-        }
-    }
+    if (step >= static_cast<int>(steps.size())) return;
+    steps[step]();
+    step++;
+    qDebug() << step;
 }
 
 void GraphWorker::reset() {
     steps.clear();
-    step_index = 0;
+    step = 0;
     clear_active_edges();
 
     for (int i = 0; i < static_cast<int>(vertices.size()); i++) {
-        vertices[i]->dis_activate();
-        vertices[i]->set_unused();
+        vertices[i]->make_black();
         vertices[i]->set_value(std::to_string(i + 1));
         vertices[i]->update();
     }
-
-    for (auto *edge : edges) {
-        edge->dis_activate_i_j();
-        edge->dis_activate_j_i();
-        edge->update();
-    }
+    for (auto v: edge_matrix)
+        for (auto ui_edge: v)
+            if (ui_edge != nullptr) {
+                ui_edge->dis_activate_i_j();
+                ui_edge->dis_activate_j_i();
+                ui_edge->update();
+            }
+    table->hide();
+    table_label->hide();
 }
-
 
 void GraphWorker::bfs_prepare(int start_index) {
     steps.clear();
-    step_index = 0;
-    last_dist.clear();
-    active_edges.clear();
-
+    step = 0;
     int n = graph.size();
-    if (n == 0) return;
-    if (start_index < 0 || start_index >= n) return;
-
-    std::vector<bool> visited(n, false);
+    std::vector<bool> used(n, false);
     std::queue<int> q;
 
-    visited[start_index] = true;
+    used[start_index] = true;
     q.push(start_index);
 
-    Step root_step;
-    root_step.type = Step::VertexAdvance;
-    root_step.cur_v = start_index;
-    steps.push_back(root_step);
-
     while (!q.empty()) {
-        int v = q.front();
+        int node = q.front();
         q.pop();
 
         for (int j = 0; j < n; j++) {
-            if (graph.has_edge(v, j) && !visited[j]) {
-                visited[j] = true;
+            if (graph.has_edge(node, j) && !used[j]) {
+                used[j] = true;
                 q.push(j);
+                steps.push_back([this, node]() {
+                    vertices[node]->make_red();
+                });
+                steps.push_back([this, node, j]() {
+                    auto edge = edge_matrix[node][j];
+                    if (edge)
+                        node < j ? edge->activate_i_j() : edge->activate_j_i();
+                });
 
-                Step edge_step;
-                edge_step.type = Step::EdgeActivate;
-                edge_step.from = v;
-                edge_step.to = j;
-                steps.push_back(edge_step);
-
-                Step vertex_step;
-                vertex_step.type = Step::VertexAdvance;
-                vertex_step.prev_v = v;
-                vertex_step.cur_v = j;
-                vertex_step.from = v;
-                vertex_step.to = j;
-                steps.push_back(vertex_step);
+                steps.push_back([this, node, j]() {
+                    vertices[node]->make_blue();
+                    auto edge = edge_matrix[node][j];
+                    if (edge)
+                        node < j ? edge->dis_activate_i_j() : edge->dis_activate_j_i();
+                    vertices[j]->make_red();
+                });
+                steps.push_back([this, j]() {
+                    vertices[j]->make_blue();
+                });
             }
         }
     }
 }
 
+
 void GraphWorker::dijkstra_prepare(int start_index) {
     steps.clear();
-    step_index = 0;
-    last_dist.clear();
-    active_edges.clear();
-
+    step = 0;
     int n = graph.size();
-    if (n == 0) return;
-    if (start_index < 0 || start_index >= n) return;
-
-    const int INF = 1000000000;
-    std::vector<int> dist(n, INF);
-    last_dist = dist;
     std::vector<bool> used(n, false);
+    std::vector<int> d(n, INT_MAX);
+    d[start_index] = 0;
 
-    dist[start_index] = 0;
+    for (int i = 0; i < n; i++)
+        vertices[i]->set_value(std::to_string(i + 1) + "\n+inf");
+    vertices[start_index]->set_value(std::to_string(start_index + 1) + "\n0");
 
-    for (int iter = 0; iter < n; iter++) {
+    for (int i = 0; i < n; i++) {
         int v = -1;
-        for (int i = 0; i < n; i++) {
-            if (!used[i] && (v == -1 || dist[i] < dist[v]))
-                v = i;
-        }
-        if (v == -1 || dist[v] == INF) break;
-
+        for (int j = 0; j < n; j++)
+            if (!used[j] && (v == -1 || d[j] < d[v]))
+                v = j;
+        if (v == -1 || d[v] == INT_MAX) break;
         used[v] = true;
 
-        Step select_step;
-        select_step.type = Step::DijkstraSelect;
-        select_step.cur_v = v;
-        select_step.dist = dist[v];
-        steps.push_back(select_step);
+        steps.push_back([this, v]() {
+            vertices[v]->make_red();
+        });
 
-        for (int to = 0; to < n; to++) {
-            if (!graph.has_edge(v, to)) continue;
-            int *weight_ptr = graph.get_weight(v, to);
-            if (!weight_ptr) continue;
-            int weight = *weight_ptr;
+        for (int e = 0; e < n; e++) {
+            auto weight = graph.get_matrix()[v][e];
+            if (weight == nullptr) continue;
+            if (d[v] + *weight >= d[e]) continue;
 
-            Step inspect_step;
-            inspect_step.type = Step::DijkstraInspect;
-            inspect_step.from = v;
-            inspect_step.to = to;
-            steps.push_back(inspect_step);
+            d[e] = d[v] + *weight;
+            int new_dist = d[e];
+            std::string new_val = std::to_string(e + 1) + "\n" + std::to_string(new_dist);
 
-            if (dist[v] + weight < dist[to]) {
-                dist[to] = dist[v] + weight;
-                last_dist = dist;
+            steps.push_back([this, v, e, new_val]() {
+                auto *edge = edge_matrix[v][e];
+                if (edge)
+                    v < e ? edge->activate_i_j() : edge->activate_j_i();
+                vertices[e]->make_green();
+                vertices[e]->set_value(new_val);
+            });
 
-                Step relax_step;
-                relax_step.type = Step::DijkstraRelax;
-                relax_step.from = v;
-                relax_step.to = to;
-                relax_step.dist = dist[to];
-                steps.push_back(relax_step);
+            steps.push_back([this, v, e]() {
+                auto *edge = edge_matrix[v][e];
+                if (edge)
+                    v < e ? edge->dis_activate_i_j() : edge->dis_activate_j_i();
+                vertices[e]->make_black();
+            });
+        }
+
+        steps.push_back([this, v]() {
+            vertices[v]->make_blue();
+        });
+    }
+}
+
+void GraphWorker::set_cell(int i, int j, const QString& text, const QColor& color) {
+    auto* item = table->item(i, j);
+    if (!item) {
+        item = new QTableWidgetItem();
+        table->setItem(i, j, item);
+    }
+    item->setText(text);
+    item->setBackground(color);
+    item->setTextAlignment(Qt::AlignCenter);
+}
+
+void GraphWorker::floyd_prepare() {
+    steps.clear();
+    step = 0;
+    int n = graph.size();
+
+    table->show();
+    table_label->show();
+    table->setRowCount(n);
+    table->setColumnCount(n);
+
+    for (int i = 0; i < n; i++) {
+        table->setHorizontalHeaderItem(i, new QTableWidgetItem(QString::number(i + 1)));
+        table->setVerticalHeaderItem(i, new QTableWidgetItem(QString::number(i + 1)));
+        table->setColumnWidth(i, 50);
+        table->setRowHeight(i, 30);
+    }
+
+    std::vector<std::vector<int>> d(n, std::vector<int>(n, INT_MAX));
+    for (int i = 0; i < n; i++) d[i][i] = 0;
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
+            if (graph.get_matrix()[i][j] != nullptr)
+                d[i][j] = *graph.get_matrix()[i][j];
+
+    table_label->setText("Initial stage");
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++) {
+            QString val = d[i][j] == INT_MAX ? "+inf" : QString::number(d[i][j]);
+            set_cell(i, j, val, Qt::white);
+        }
+
+    for (int k = 0; k < n; k++) {
+        steps.push_back([this, k, d, n]() {
+            table_label->setText(QString("Throw: %1").arg(k + 1));
+            for (int i = 0; i < n; i++)
+                for (int j = 0; j < n; j++) {
+                    QString val = d[i][j] == INT_MAX ? "+inf" : QString::number(d[i][j]);
+                    QColor color = (i == k || j == k) ? QColor(200, 200, 255) : Qt::white;
+                    set_cell(i, j, val, color);
+                }
+            for (auto* v : vertices) v->make_black();
+            vertices[k]->make_blue();
+        });
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (d[i][k] == INT_MAX || d[k][j] == INT_MAX) continue;
+                if (d[i][k] + d[k][j] >= d[i][j]) continue;
+
+                d[i][j] = d[i][k] + d[k][j];
+                int new_dist = d[i][j];
+
+                steps.push_back([this, i, j, k, d, n, new_dist]() {
+                    table_label->setText(QString("d[%1][%2] throw %3 = %4")
+                        .arg(i+1).arg(j+1).arg(k+1).arg(new_dist));
+
+                    for (int a = 0; a < n; a++)
+                        for (int b = 0; b < n; b++) {
+                            QString val = d[a][b] == INT_MAX ? "+inf" : QString::number(d[a][b]);
+                            QColor color = (a == k || b == k) ? QColor(200, 200, 255) : Qt::white;
+                            set_cell(a, b, val, color);
+                        }
+
+                    for (int b = 0; b < n; b++)
+                        table->item(i, b)->setBackground(QColor(255, 180, 180));
+                    for (int a = 0; a < n; a++)
+                        table->item(a, j)->setBackground(QColor(255, 255, 180));
+                    for (int a = 0; a < n; a++) {
+                        table->item(a, k)->setBackground(QColor(200, 200, 255));
+                        table->item(k, a)->setBackground(QColor(200, 200, 255));
+                    }
+                    set_cell(i, j, QString::number(new_dist), QColor(180, 255, 180));
+
+                    for (auto* v : vertices) v->make_black();
+                    vertices[k]->make_blue();
+                    vertices[i]->make_red();
+                    vertices[j]->make_green();
+                });
             }
         }
     }
+
+    steps.push_back([this, d, n]() {
+        table_label->setText("The end");
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++) {
+                QString val = d[i][j] == INT_MAX ? "+inf" : QString::number(d[i][j]);
+                set_cell(i, j, val, QColor(220, 255, 220));
+            }
+        for (auto* v : vertices) v->make_black();
+    });
 }

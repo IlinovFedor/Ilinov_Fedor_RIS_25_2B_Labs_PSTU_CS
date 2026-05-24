@@ -64,6 +64,7 @@ MainWindow::MainWindow() : QWidget(nullptr){
     connect(run_dfs, &QPushButton::clicked, this, &MainWindow::on_run_dfs_clicked);
     connect(run_bfs, &QPushButton::clicked, this, &MainWindow::on_run_bfs_clicked);
     connect(run_dijkstra, &QPushButton::clicked, this, &MainWindow::on_run_dijkstra_clicked);
+    connect(run_floyd, &QPushButton::clicked, this, &MainWindow::on_run_floyd_clicked);
     connect(next, &QPushButton::clicked, this, &MainWindow::on_next_clicked);
     connect(reset, &QPushButton::clicked, this, &MainWindow::on_reset_clicked);
 }
@@ -201,6 +202,15 @@ void MainWindow::on_run_dijkstra_clicked() {
 
     worker->reset();
     worker->dijkstra_prepare(spin->value() - 1);
+}
+
+
+void MainWindow::on_run_floyd_clicked() {
+    int n = worker->graph.size();
+    if (n == 0) return;
+
+    worker->reset();
+    worker->floyd_prepare();
 }
 
 

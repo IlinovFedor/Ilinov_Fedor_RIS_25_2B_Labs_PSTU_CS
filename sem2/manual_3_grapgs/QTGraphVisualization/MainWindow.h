@@ -51,6 +51,9 @@ private slots:
     void on_run_dfs_clicked();
     void on_run_bfs_clicked();
     void on_run_dijkstra_clicked();
+
+    void on_run_floyd_clicked();
+
     void on_next_clicked();
     void on_reset_clicked();
 };

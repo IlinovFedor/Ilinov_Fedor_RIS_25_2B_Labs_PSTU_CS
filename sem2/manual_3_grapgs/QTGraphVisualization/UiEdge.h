@@ -14,6 +14,8 @@ class UiEdge : public QGraphicsItem {
     int* j_i_weight = nullptr;
     bool is_active_i_j = false;
     bool is_active_j_i = false;
+    bool is_used_i_j = false;
+    bool is_used_j_i = false;
     QPolygonF build_arrow(const QPointF &from, const QPointF &to, double size, double offset);
 
 
@@ -33,6 +35,9 @@ public:
 
     void activate_j_i();
     void dis_activate_j_i();
+
+    int* get_i_j_weight();;
+    int* get_j_i_weight();;
 };
 
 #endif //QTGRAPHVISUALIZATION_UIEDGE_H

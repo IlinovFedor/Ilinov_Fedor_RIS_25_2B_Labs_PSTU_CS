@@ -50,17 +50,14 @@ bool Graph::is_visual_tree() {
     int n = matrix.size();
     if (n == 0) return false;
 
-    // Считаем рёбра как неориентированные пары
     int edgeCount = 0;
     for (int i = 0; i < n; i++)
         for (int j = i + 1; j < n; j++)
             if (matrix[i][j] != nullptr || matrix[j][i] != nullptr)
                 edgeCount++;
 
-    // Условие E = V - 1
     if (edgeCount != n - 1) return false;
 
-    // Проверяем связность через BFS по неориентированному графу
     std::vector<bool> visited(n, false);
     std::queue<int> q;
     q.push(0);
@@ -85,7 +82,6 @@ bool Graph::is_visual_tree() {
 }
 
 void Graph::generateRandom(int n, int maxWeight, double edgeProbability) {
-    // Очищаем матрицу
     for (auto &row: matrix)
         for (auto *p: row)
             delete p;
@@ -111,7 +107,6 @@ void Graph::generateTree(int n, int maxWeight) {
 
     matrix.assign(n, std::vector<int *>(n, nullptr));
 
-    // Перемешиваем порядок вершин
     std::vector<int> perm(n);
     for (int i = 0; i < n; i++) perm[i] = i;
     for (int i = n - 1; i > 0; i--) {
@@ -120,8 +115,6 @@ void Graph::generateTree(int n, int maxWeight) {
         std::swap(perm[i], perm[j]);
     }
 
-    // Для каждой вершины (кроме первой) подключаем к случайному
-    // уже добавленному узлу — гарантирует связность и отсутствие циклов
     for (int i = 1; i < n; i++) {
         int parent = perm[std::rand() % i];
         int child = perm[i];
@@ -140,4 +133,13 @@ bool Graph::has_edge(int i, int j) {
 
 int *Graph::get_weight(int i, int j) {
     return matrix[i][j];
+}
+
+void Graph::dfs(uint n, std::vector<bool> &visited) {
+    visited[n] = true;
+    for (auto& i : matrix[n]) {
+        if (i != nullptr && !visited[*i]) {
+            dfs(*i, visited);
+        }
+    }
 }

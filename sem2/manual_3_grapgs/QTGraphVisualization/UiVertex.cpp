@@ -18,11 +18,7 @@ void UiVertex::paint(QPainter *painter,
                      const QStyleOptionGraphicsItem *,
                      QWidget *) {
 
-    painter->setPen(QPen(Qt::black, 3));
-    if (is_used)
-        painter->setPen(QPen(Qt::blue, 5));
-    if (is_active)
-        painter->setPen(QPen(Qt::red, 5));
+    painter->setPen(pen);
 
     painter->setBrush(Qt::white);
     painter->drawEllipse(boundingRect());
@@ -46,18 +42,20 @@ const qreal UiVertex::get_radius() {
     return vertex_radius;
 }
 
-void UiVertex::activate() {
-    is_active = true;
+void UiVertex::make_red() {
+    pen = QPen(Qt::red, 5);
+    update();
+}
+void UiVertex::make_blue() {
+    pen = QPen(Qt::blue, 5);
+    update();
+}
+void UiVertex::make_green() {
+    pen = QPen(Qt::green, 3 );
+    update();
 }
 
-void UiVertex::dis_activate() {
-    is_active = false;
-}
-
-void UiVertex::set_used() {
-    is_used = true;
-}
-
-void UiVertex::set_unused() {
-    is_used = false;
+void UiVertex::make_black() {
+    pen = QPen(Qt::black, 3);
+    update();
 }

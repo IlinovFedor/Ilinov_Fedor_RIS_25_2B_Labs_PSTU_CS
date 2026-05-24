@@ -28,6 +28,8 @@ public:
     int size();
     bool has_edge(int i, int j);
     int *get_weight(int i, int j);
+
+    void dfs(uint n, std::vector<bool>& visited);
 };
 
 

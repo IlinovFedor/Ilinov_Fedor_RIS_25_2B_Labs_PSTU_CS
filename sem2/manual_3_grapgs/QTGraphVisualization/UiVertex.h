@@ -12,8 +12,8 @@ class UiVertex : public QGraphicsItem {
     std::string vertex_label = "0";
     qreal vertex_radius = 30;
 
-    bool is_active = false;
-    bool is_used = false;
+    QColor color = Qt::black;
+    QPen pen = QPen(Qt::black, 3);
 public:
     UiVertex(std::string value = "0");
 
@@ -21,11 +21,10 @@ public:
     void set_value(std::string value);
     const qreal get_radius();
 
-    void activate();
-    void dis_activate();
-    void set_used();
-    void set_unused();
-
+    void make_red();
+    void make_green();
+    void make_blue();
+    void make_black();
     QRectF boundingRect() const override;
 
     void paint(QPainter *painter,
