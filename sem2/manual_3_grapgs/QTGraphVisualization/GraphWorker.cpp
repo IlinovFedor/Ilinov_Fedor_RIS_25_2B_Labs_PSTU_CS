@@ -8,27 +8,25 @@
 #include <QVBoxLayout>
 #include <cmath>
 
-namespace {
-    void assign_tree_positions(int v,
-                               int depth,
-                               const std::vector<std::vector<int> > &children,
-                               std::vector<double> &x_pos,
-                               std::vector<double> &y_pos,
-                               int &leaf_counter,
-                               double h_step,
-                               double v_step) {
-        y_pos[v] = depth * v_step + 60.0;
-        if (children[v].empty()) {
-            x_pos[v] = leaf_counter * h_step + 60.0;
-            leaf_counter++;
-            return;
-        }
-
-        for (int c: children[v])
-            assign_tree_positions(c, depth + 1, children, x_pos, y_pos, leaf_counter, h_step, v_step);
-
-        x_pos[v] = (x_pos[children[v].front()] + x_pos[children[v].back()]) / 2.0;
+void assign_tree_positions(int v,
+                           int depth,
+                           const std::vector<std::vector<int> > &children,
+                           std::vector<double> &x_pos,
+                           std::vector<double> &y_pos,
+                           int &leaf_counter,
+                           double h_step,
+                           double v_step) {
+    y_pos[v] = depth * v_step + 60.0;
+    if (children[v].empty()) {
+        x_pos[v] = leaf_counter * h_step + 60.0;
+        leaf_counter++;
+        return;
     }
+
+    for (int c: children[v])
+        assign_tree_positions(c, depth + 1, children, x_pos, y_pos, leaf_counter, h_step, v_step);
+
+    x_pos[v] = (x_pos[children[v].front()] + x_pos[children[v].back()]) / 2.0;
 }
 
 void GraphWorker::clear_active_edges() {
@@ -405,8 +403,8 @@ void GraphWorker::dijkstra_prepare(int start_index) {
     }
 }
 
-void GraphWorker::set_cell(int i, int j, const QString& text, const QColor& color) {
-    auto* item = table->item(i, j);
+void GraphWorker::set_cell(int i, int j, const QString &text, const QColor &color) {
+    auto *item = table->item(i, j);
     if (!item) {
         item = new QTableWidgetItem();
         table->setItem(i, j, item);
@@ -433,7 +431,7 @@ void GraphWorker::floyd_prepare() {
         table->setRowHeight(i, 30);
     }
 
-    std::vector<std::vector<int>> d(n, std::vector<int>(n, INT_MAX));
+    std::vector<std::vector<int> > d(n, std::vector<int>(n, INT_MAX));
     for (int i = 0; i < n; i++) d[i][i] = 0;
     for (int i = 0; i < n; i++)
         for (int j = 0; j < n; j++)
@@ -456,7 +454,7 @@ void GraphWorker::floyd_prepare() {
                     QColor color = (i == k || j == k) ? QColor(200, 200, 255) : Qt::white;
                     set_cell(i, j, val, color);
                 }
-            for (auto* v : vertices) v->make_black();
+            for (auto *v: vertices) v->make_black();
             vertices[k]->make_blue();
         });
 
@@ -470,7 +468,7 @@ void GraphWorker::floyd_prepare() {
 
                 steps.push_back([this, i, j, k, d, n, new_dist]() {
                     table_label->setText(QString("d[%1][%2] throw %3 = %4")
-                        .arg(i+1).arg(j+1).arg(k+1).arg(new_dist));
+                        .arg(i + 1).arg(j + 1).arg(k + 1).arg(new_dist));
 
                     for (int a = 0; a < n; a++)
                         for (int b = 0; b < n; b++) {
@@ -489,7 +487,7 @@ void GraphWorker::floyd_prepare() {
                     }
                     set_cell(i, j, QString::number(new_dist), QColor(180, 255, 180));
 
-                    for (auto* v : vertices) v->make_black();
+                    for (auto *v: vertices) v->make_black();
                     vertices[k]->make_blue();
                     vertices[i]->make_red();
                     vertices[j]->make_green();
@@ -505,6 +503,6 @@ void GraphWorker::floyd_prepare() {
                 QString val = d[i][j] == INT_MAX ? "+inf" : QString::number(d[i][j]);
                 set_cell(i, j, val, QColor(220, 255, 220));
             }
-        for (auto* v : vertices) v->make_black();
+        for (auto *v: vertices) v->make_black();
     });
 }

@@ -26,8 +26,6 @@ add_executable(QTGraphVisualization main.cpp
         GraphWorker.h
         MatrixEditor.cpp
         MatrixEditor.h
-        Step.cpp
-        Step.h
 )
 target_link_libraries(QTGraphVisualization
   Qt::Core
