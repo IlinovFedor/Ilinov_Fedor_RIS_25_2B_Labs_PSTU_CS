@@ -34,28 +34,18 @@ std::string GraphWorker::key_str(double key) {
     return s.toStdString();
 }
 
-void GraphWorker::compute_positions(Node *node, int depth, int &leaf_counter,
+void GraphWorker::compute_positions(Node *node, int depth, int &index,
                                      std::unordered_map<Node *, double> &x_pos,
                                      std::unordered_map<Node *, double> &y_pos) {
+    if (!node) return;
     const double H_STEP = 200.0;
     const double V_STEP = 200.0;
 
+    compute_positions(node->left, depth + 1, index, x_pos, y_pos);
+    x_pos[node] = index * H_STEP + 60.0;
     y_pos[node] = depth * V_STEP + 60.0;
-
-    if (!node->left && !node->right) {
-        x_pos[node] = leaf_counter * H_STEP + 60.0;
-        leaf_counter++;
-        return;
-    }
-
-    if (node->left)
-        compute_positions(node->left, depth + 1, leaf_counter, x_pos, y_pos);
-    if (node->right)
-        compute_positions(node->right, depth + 1, leaf_counter, x_pos, y_pos);
-
-    double left_x = node->left ? x_pos[node->left] : (leaf_counter * H_STEP + 60.0);
-    double right_x = node->right ? x_pos[node->right] : (leaf_counter * H_STEP + 60.0);
-    x_pos[node] = (left_x + right_x) / 2.0;
+    index++;
+    compute_positions(node->right, depth + 1, index, x_pos, y_pos);
 }
 
 void GraphWorker::draw_tree() {
@@ -66,8 +56,8 @@ void GraphWorker::draw_tree() {
     if (!tree.getRoot()) return;
 
     std::unordered_map<Node *, double> x_pos, y_pos;
-    int leaf_counter = 0;
-    compute_positions(tree.getRoot(), 0, leaf_counter, x_pos, y_pos);
+    int index = 0;
+    compute_positions(tree.getRoot(), 0, index, x_pos, y_pos);
 
     double min_x = 1e9, max_x = -1e9, min_y = 1e9, max_y = -1e9;
     for (auto &[node, x] : x_pos) {

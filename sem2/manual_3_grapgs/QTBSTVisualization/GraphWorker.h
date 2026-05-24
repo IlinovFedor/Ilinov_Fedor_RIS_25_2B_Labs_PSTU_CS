@@ -20,7 +20,7 @@ class GraphWorker : public QWidget {
     QGraphicsScene *scene;
     QGraphicsView *view;
 
-    void compute_positions(Node *node, int depth, int &leaf_counter,
+    void compute_positions(Node *node, int depth, int &index,
                            std::unordered_map<Node *, double> &x_pos,
                            std::unordered_map<Node *, double> &y_pos);
     void draw_tree();
