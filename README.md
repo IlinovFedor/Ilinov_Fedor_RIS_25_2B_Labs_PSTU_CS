@@ -77,5 +77,6 @@
 
 ### Графы (все с визуализацией)
 
-- [ ] Простые графы: +-V, +-E, correct E & m, DFS, BFS, DIJKSTRA, HLOYD-WARSHAU + UML и отчеты
-- [ ] BST: find/add/remove, балансировка, обходы (incorder, preorder, pastorder), печать
+- [ ] [Простые графы: +-V, +-E, correct E & m, DFS, BFS, DIJKSTRA, HLOYD-WARSHAU + UML и отчеты](/sem2/manual_3_grapgs/QTGraphVisualization)
+- [ ] [BST: find/add/remove, балансировка, обходы (incorder, preorder, pastorder)](/sem2/manual_3_grapgs/QTBSTVisualization)
+- [ ] [Задача коммивояжера](/sem2/manual_3_grapgs/QTBNBVisualization)
